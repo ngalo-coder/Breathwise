@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1,
+    "alert_type": "pollution_spike",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        36.8172,
+        -1.2864
+      ]
+    },
+    "severity": "medium",
+    "message": "High PM2.5 levels detected in Nairobi CBD - 45.2 \u03bcg/m\u00b3",
+    "pm25_level": 45.2,
+    "triggered_at": "2025-08-19T00:06:58.246574",
+    "status": "active",
+    "zone_name": "Nairobi CBD"
+  },
+  {
+    "id": 2,
+    "alert_type": "pollution_spike",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        36.8581,
+        -1.3128
+      ]
+    },
+    "severity": "high",
+    "message": "High PM2.5 levels detected in Industrial Area - 67.3 \u03bcg/m\u00b3",
+    "pm25_level": 67.3,
+    "triggered_at": "2025-08-19T00:06:58.246574",
+    "status": "active",
+    "zone_name": "Industrial Area"
+  },
+  {
+    "id": 3,
+    "alert_type": "pollution_spike",
+    "location": {
+      "type": "Point",
+      "coordinates": [
+        36.8833,
+        -1.3167
+      ]
+    },
+    "severity": "critical",
+    "message": "High PM2.5 levels detected in Embakasi - 89.5 \u03bcg/m\u00b3",
+    "pm25_level": 89.5,
+    "triggered_at": "2025-08-19T00:06:58.246574",
+    "status": "active",
+    "zone_name": "Embakasi"
+  }
+]

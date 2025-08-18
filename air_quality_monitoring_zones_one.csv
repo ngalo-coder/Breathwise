@@ -1,0 +1,6 @@
+Location_ID,Location_Name,Latitude,Longitude,PM25_ugm3,AQI_Category,Data_Quality,Last_Updated
+NBO_001,Nairobi CBD,-1.2864,36.8172,45.2,Unhealthy for Sensitive Groups,High,2025-08-17T10:30:00Z
+NBO_002,Industrial Area,-1.3128,36.8581,67.3,Unhealthy,High,2025-08-17T10:30:00Z
+NBO_003,Westlands,-1.2630,36.8089,32.1,Moderate,Medium,2025-08-17T10:30:00Z
+NBO_004,Embakasi,-1.3167,36.8833,89.5,Very Unhealthy,High,2025-08-17T10:30:00Z
+NBO_005,Karen,-1.3197,36.7083,18.7,Good,High,2025-08-17T10:30:00Z

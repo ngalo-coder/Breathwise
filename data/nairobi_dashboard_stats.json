@@ -1,0 +1,52 @@
+{
+  "air_quality": {
+    "total_measurements": 5,
+    "avg_pm25": 50.6,
+    "max_pm25": 89.5,
+    "unhealthy_readings": 3,
+    "last_update": "2025-08-19T00:06:58.278128"
+  },
+  "policy_stats": {
+    "pending": 1,
+    "approved": 1,
+    "in progress": 1
+  },
+  "alert_stats": {
+    "medium": 1,
+    "high": 1,
+    "critical": 1
+  },
+  "pollution_sources": [
+    {
+      "source_type": "traffic",
+      "measurement_count": 1,
+      "avg_pm25": 45.2,
+      "location": "Nairobi CBD"
+    },
+    {
+      "source_type": "industry",
+      "measurement_count": 1,
+      "avg_pm25": 67.3,
+      "location": "Industrial Area"
+    },
+    {
+      "source_type": "background",
+      "measurement_count": 1,
+      "avg_pm25": 32.1,
+      "location": "Westlands"
+    },
+    {
+      "source_type": "mixed",
+      "measurement_count": 1,
+      "avg_pm25": 89.5,
+      "location": "Embakasi"
+    },
+    {
+      "source_type": "background",
+      "measurement_count": 1,
+      "avg_pm25": 18.7,
+      "location": "Karen"
+    }
+  ],
+  "generated_at": "2025-08-19T00:06:58.278128"
+}

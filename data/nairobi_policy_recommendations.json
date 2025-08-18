@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "zone_id": "NBO_CBD_01",
+    "policy_type": "vehicle_restriction",
+    "title": "Vehicle Restriction - Central Business District",
+    "description": "Policy intervention for Central Business District - 25-30% PM2.5 reduction",
+    "priority": "high",
+    "expected_impact_percent": 25.0,
+    "cost_estimate": 8200,
+    "implementation_time_days": 30,
+    "status": "pending",
+    "created_at": "2025-08-19T00:06:58.182145",
+    "grid_info": {
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8172,
+          -1.2864
+        ]
+      },
+      "priority_score": 85,
+      "dominant_source": "Traffic"
+    }
+  },
+  {
+    "id": 2,
+    "zone_id": "NBO_IND_01",
+    "policy_type": "emission_monitoring",
+    "title": "Emission Monitoring - Industrial Area",
+    "description": "Policy intervention for Industrial Area - 15-20% SO2 reduction",
+    "priority": "critical",
+    "expected_impact_percent": 15.0,
+    "cost_estimate": 15000,
+    "implementation_time_days": 90,
+    "status": "approved",
+    "created_at": "2025-08-19T00:06:58.182145",
+    "grid_info": {
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8581,
+          -1.3128
+        ]
+      },
+      "priority_score": 92,
+      "dominant_source": "Industry"
+    }
+  },
+  {
+    "id": 3,
+    "zone_id": "NBO_DAN_01",
+    "policy_type": "waste_management",
+    "title": "Waste Management - Dandora Area",
+    "description": "Policy intervention for Dandora Area - 40-50% spike reduction",
+    "priority": "medium",
+    "expected_impact_percent": 40.0,
+    "cost_estimate": 12000,
+    "implementation_time_days": 60,
+    "status": "in progress",
+    "created_at": "2025-08-19T00:06:58.182145",
+    "grid_info": {
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8969,
+          -1.2364
+        ]
+      },
+      "priority_score": 78,
+      "dominant_source": "Waste"
+    }
+  }
+]

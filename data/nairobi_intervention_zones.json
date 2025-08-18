@@ -1,0 +1,56 @@
+[
+  {
+    "zone_id": "NBO_CBD_01",
+    "zone_name": "Central Business District",
+    "latitude": -1.2864,
+    "longitude": 36.8172,
+    "priority_score": 85,
+    "dominant_source": "Traffic",
+    "policy_type": "Vehicle Restriction",
+    "expected_impact": "25-30% PM2.5 reduction",
+    "status": "Pending",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.8172,
+        -1.2864
+      ]
+    }
+  },
+  {
+    "zone_id": "NBO_IND_01",
+    "zone_name": "Industrial Area",
+    "latitude": -1.3128,
+    "longitude": 36.8581,
+    "priority_score": 92,
+    "dominant_source": "Industry",
+    "policy_type": "Emission Monitoring",
+    "expected_impact": "15-20% SO2 reduction",
+    "status": "Approved",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.8581,
+        -1.3128
+      ]
+    }
+  },
+  {
+    "zone_id": "NBO_DAN_01",
+    "zone_name": "Dandora Area",
+    "latitude": -1.2364,
+    "longitude": 36.8969,
+    "priority_score": 78,
+    "dominant_source": "Waste",
+    "policy_type": "Waste Management",
+    "expected_impact": "40-50% spike reduction",
+    "status": "In Progress",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.8969,
+        -1.2364
+      ]
+    }
+  }
+]

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "NBO_001",
+    "name": "Nairobi CBD",
+    "latitude": -1.2864,
+    "longitude": 36.8172,
+    "pm25": 45.2,
+    "aqi_category": "Unhealthy for Sensitive Groups",
+    "data_quality": "High",
+    "last_updated": "2025-08-17T10:30:00Z",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.8172,
+        -1.2864
+      ]
+    },
+    "properties": {
+      "severity": "unhealthy",
+      "aqi": 175,
+      "health_impact": "Unhealthy"
+    }
+  },
+  {
+    "id": "NBO_002",
+    "name": "Industrial Area",
+    "latitude": -1.3128,
+    "longitude": 36.8581,
+    "pm25": 67.3,
+    "aqi_category": "Unhealthy",
+    "data_quality": "High",
+    "last_updated": "2025-08-17T10:30:00Z",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.8581,
+        -1.3128
+      ]
+    },
+    "properties": {
+      "severity": "very_unhealthy",
+      "aqi": 208,
+      "health_impact": "Very Unhealthy"
+    }
+  },
+  {
+    "id": "NBO_003",
+    "name": "Westlands",
+    "latitude": -1.263,
+    "longitude": 36.8089,
+    "pm25": 32.1,
+    "aqi_category": "Moderate",
+    "data_quality": "Medium",
+    "last_updated": "2025-08-17T10:30:00Z",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.8089,
+        -1.263
+      ]
+    },
+    "properties": {
+      "severity": "unhealthy_sensitive",
+      "aqi": 135,
+      "health_impact": "Unhealthy for Sensitive Groups"
+    }
+  },
+  {
+    "id": "NBO_004",
+    "name": "Embakasi",
+    "latitude": -1.3167,
+    "longitude": 36.8833,
+    "pm25": 89.5,
+    "aqi_category": "Very Unhealthy",
+    "data_quality": "High",
+    "last_updated": "2025-08-17T10:30:00Z",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.8833,
+        -1.3167
+      ]
+    },
+    "properties": {
+      "severity": "very_unhealthy",
+      "aqi": 223,
+      "health_impact": "Very Unhealthy"
+    }
+  },
+  {
+    "id": "NBO_005",
+    "name": "Karen",
+    "latitude": -1.3197,
+    "longitude": 36.7083,
+    "pm25": 18.7,
+    "aqi_category": "Good",
+    "data_quality": "High",
+    "last_updated": "2025-08-17T10:30:00Z",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        36.7083,
+        -1.3197
+      ]
+    },
+    "properties": {
+      "severity": "moderate",
+      "aqi": 68,
+      "health_impact": "Moderate"
+    }
+  }
+]

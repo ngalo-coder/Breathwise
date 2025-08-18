@@ -1,0 +1,35 @@
+{
+  "recommendations": [
+    {
+      "id": 1,
+      "title": "Peak-Hour Vehicle Restrictions (CBD)",
+      "description": "Implement odd-even license plate restrictions during peak hours",
+      "priority": "high",
+      "expected_impact_percent": 28.5,
+      "cost_estimate": 8200.0,
+      "status": "pending"
+    },
+    {
+      "id": 2,
+      "title": "Industrial Stack Monitoring (Embakasi)",
+      "description": "Install continuous monitoring on top 5 industrial emitters",
+      "priority": "medium",
+      "expected_impact_percent": 18.2,
+      "cost_estimate": 15000.0,
+      "status": "approved"
+    },
+    {
+      "id": 3,
+      "title": "Waste Management Enhancement (Dandora)",
+      "description": "Increase waste collection frequency and anti-burning enforcement",
+      "priority": "high",
+      "expected_impact_percent": 42.0,
+      "cost_estimate": 7500.0,
+      "status": "in_progress"
+    }
+  ],
+  "metadata": {
+    "total": 3,
+    "generated_at": "2025-08-19T00:37:17.335980"
+  }
+}
