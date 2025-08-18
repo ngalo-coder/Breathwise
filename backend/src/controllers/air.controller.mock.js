@@ -1,30 +1,92 @@
-import fs from 'fs';
-import path from 'path';
 import { io } from '../app.js';
 
-// Read mock data files
-const readMockData = (filename) => {
-  try {
-    const filePath = path.join(process.cwd(), '..', filename);
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error(`Error reading mock data ${filename}:`, error);
-    return null;
+// Mock data for deployment without database
+const mockNairobiZones = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [36.8172, -1.2864]},
+      "properties": {
+        "id": "nairobi_zone_1",
+        "pm25": 45.2,
+        "source_type": "monitoring_station",
+        "recorded_at": new Date().toISOString(),
+        "quality_flag": 2,
+        "aqi_category": "Unhealthy for Sensitive Groups",
+        "severity": "unhealthy_sensitive",
+        "aqi": 112
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [36.8581, -1.3128]},
+      "properties": {
+        "id": "nairobi_zone_2",
+        "pm25": 67.3,
+        "source_type": "monitoring_station",
+        "recorded_at": new Date().toISOString(),
+        "quality_flag": 2,
+        "aqi_category": "Unhealthy",
+        "severity": "unhealthy",
+        "aqi": 158
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [36.8089, -1.2630]},
+      "properties": {
+        "id": "nairobi_zone_3",
+        "pm25": 32.1,
+        "source_type": "monitoring_station",
+        "recorded_at": new Date().toISOString(),
+        "quality_flag": 1,
+        "aqi_category": "Moderate",
+        "severity": "moderate",
+        "aqi": 94
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [36.8833, -1.3167]},
+      "properties": {
+        "id": "nairobi_zone_4",
+        "pm25": 89.5,
+        "source_type": "monitoring_station",
+        "recorded_at": new Date().toISOString(),
+        "quality_flag": 3,
+        "aqi_category": "Very Unhealthy",
+        "severity": "very_unhealthy",
+        "aqi": 185
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {"type": "Point", "coordinates": [36.7083, -1.3197]},
+      "properties": {
+        "id": "nairobi_zone_5",
+        "pm25": 18.7,
+        "source_type": "monitoring_station",
+        "recorded_at": new Date().toISOString(),
+        "quality_flag": 1,
+        "aqi_category": "Good",
+        "severity": "good",
+        "aqi": 62
+      }
+    }
+  ],
+  "metadata": {
+    "total_zones": 5,
+    "city": "Nairobi",
+    "country": "Kenya",
+    "generated_at": new Date().toISOString()
   }
 };
 
 export const getHotspots = async (req, res) => {
   try {
-    // For hotspots, we'll use the same zones data but filter for higher PM2.5
-    const zonesData = readMockData('mock_nairobi_zones.json');
-    
-    if (!zonesData) {
-      return res.status(500).json({ error: 'Mock data not available' });
-    }
-
     // Filter for hotspots (PM2.5 > 35)
-    const hotspotFeatures = zonesData.features.filter(
+    const hotspotFeatures = mockNairobiZones.features.filter(
       feature => feature.properties.pm25 > 35
     );
 
@@ -61,17 +123,7 @@ export const getHotspots = async (req, res) => {
 
 export const getNairobiZones = async (req, res) => {
   try {
-    const zonesData = readMockData('mock_nairobi_zones.json');
-    
-    if (!zonesData) {
-      return res.status(500).json({ 
-        error: 'Mock data not available',
-        message: 'Could not read mock_nairobi_zones.json file'
-      });
-    }
-
-    res.json(zonesData);
-
+    res.json(mockNairobiZones);
   } catch (error) {
     console.error('Nairobi zones mock error:', error);
     res.status(500).json({ 
@@ -83,16 +135,10 @@ export const getNairobiZones = async (req, res) => {
 
 export const getMeasurements = async (req, res) => {
   try {
-    const zonesData = readMockData('mock_nairobi_zones.json');
-    
-    if (!zonesData) {
-      return res.status(500).json({ error: 'Mock data not available' });
-    }
-
     // Return all zones as measurements
     const measurementsResponse = {
       type: 'FeatureCollection',
-      features: zonesData.features.map(feature => ({
+      features: mockNairobiZones.features.map(feature => ({
         ...feature,
         properties: {
           ...feature.properties,
@@ -102,7 +148,7 @@ export const getMeasurements = async (req, res) => {
         }
       })),
       metadata: {
-        total_measurements: zonesData.features.length,
+        total_measurements: mockNairobiZones.features.length,
         query_params: req.query,
         generated_at: new Date().toISOString()
       }
@@ -124,27 +170,29 @@ export const triggerAnalysis = async (req, res) => {
     const analysisId = `analysis_${Date.now()}`;
     
     // Emit real-time update
-    io.to('nairobi_dashboard').emit('analysis_started', {
-      analysis_id: analysisId,
-      status: 'processing'
-    });
-
-    // Simulate processing
-    setTimeout(() => {
-      io.to('nairobi_dashboard').emit('analysis_complete', {
+    if (io) {
+      io.to('nairobi_dashboard').emit('analysis_started', {
         analysis_id: analysisId,
-        results: {
-          hotspots_found: 3,
-          priority_zones: 2,
-          recommended_actions: [
-            'Implement traffic restrictions in CBD',
-            'Increase industrial monitoring in Embakasi',
-            'Deploy mobile air quality units in Dandora'
-          ]
-        },
-        status: 'completed'
+        status: 'processing'
       });
-    }, 2000);
+
+      // Simulate processing
+      setTimeout(() => {
+        io.to('nairobi_dashboard').emit('analysis_complete', {
+          analysis_id: analysisId,
+          results: {
+            hotspots_found: 3,
+            priority_zones: 2,
+            recommended_actions: [
+              'Implement traffic restrictions in CBD',
+              'Increase industrial monitoring in Embakasi',
+              'Deploy mobile air quality units in Dandora'
+            ]
+          },
+          status: 'completed'
+        });
+      }, 2000);
+    }
 
     res.json({
       analysis_id: analysisId,

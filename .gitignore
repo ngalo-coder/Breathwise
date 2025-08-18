@@ -100,3 +100,9 @@ temp/
 .Trashes
 ehthumbs.db
 Thumbs.db
+# Organized structure
+archive/
+backend/data/*.json
+backend/scripts/__pycache__/
+backend/scripts/*.pyc
+backend/data/*.csv

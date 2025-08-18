@@ -1,4 +1,0 @@
-Zone_ID,Zone_Name,Latitude,Longitude,Priority_Score,Dominant_Source,Policy_Type,Expected_Impact,Status
-NBO_CBD_01,Central Business District,-1.2864,36.8172,85,Traffic,Vehicle Restriction,25-30% PM2.5 reduction,Pending
-NBO_IND_01,Industrial Area,-1.3128,36.8581,92,Industry,Emission Monitoring,15-20% SO2 reduction,Approved
-NBO_DAN_01,Dandora Area,-1.2364,36.8969,78,Waste,Waste Management,40-50% spike reduction,In Progress

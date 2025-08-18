@@ -1,0 +1,40 @@
+{
+    "version": 2,
+    "name": "unep-air-quality-platform",
+    "buildCommand": "cd frontend && npm run build",
+    "outputDirectory": "frontend/dist",
+    "installCommand": "cd frontend && npm install",
+    "framework": "vite",
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": "https://unep-air-backend.onrender.com/api/$1"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/.*",
+        "headers": [
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
+        ]
+      }
+    ],
+    "env": {
+      "VITE_API_URL": "https://unep-air-backend.onrender.com"
+    }
+  }

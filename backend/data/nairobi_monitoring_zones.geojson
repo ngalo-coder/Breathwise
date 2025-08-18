@@ -11,14 +11,15 @@
         ]
       },
       "properties": {
-        "id": "nairobi_zone_1",
+        "id": "NBO_001",
+        "name": "Nairobi CBD",
         "pm25": 45.2,
-        "source_type": "monitoring_station",
-        "recorded_at": "2025-08-19T00:37:17.335980",
-        "quality_flag": 2,
         "aqi_category": "Unhealthy for Sensitive Groups",
-        "severity": "unhealthy_sensitive",
-        "aqi": 112
+        "data_quality": "High",
+        "last_updated": "2025-08-17T10:30:00Z",
+        "severity": "unhealthy",
+        "aqi": 175,
+        "health_impact": "Unhealthy"
       }
     },
     {
@@ -31,14 +32,15 @@
         ]
       },
       "properties": {
-        "id": "nairobi_zone_2",
+        "id": "NBO_002",
+        "name": "Industrial Area",
         "pm25": 67.3,
-        "source_type": "monitoring_station",
-        "recorded_at": "2025-08-19T00:37:17.335980",
-        "quality_flag": 2,
         "aqi_category": "Unhealthy",
-        "severity": "unhealthy",
-        "aqi": 158
+        "data_quality": "High",
+        "last_updated": "2025-08-17T10:30:00Z",
+        "severity": "very_unhealthy",
+        "aqi": 208,
+        "health_impact": "Very Unhealthy"
       }
     },
     {
@@ -51,14 +53,15 @@
         ]
       },
       "properties": {
-        "id": "nairobi_zone_3",
+        "id": "NBO_003",
+        "name": "Westlands",
         "pm25": 32.1,
-        "source_type": "monitoring_station",
-        "recorded_at": "2025-08-19T00:37:17.335980",
-        "quality_flag": 1,
         "aqi_category": "Moderate",
-        "severity": "moderate",
-        "aqi": 94
+        "data_quality": "Medium",
+        "last_updated": "2025-08-17T10:30:00Z",
+        "severity": "unhealthy_sensitive",
+        "aqi": 135,
+        "health_impact": "Unhealthy for Sensitive Groups"
       }
     },
     {
@@ -71,14 +74,15 @@
         ]
       },
       "properties": {
-        "id": "nairobi_zone_4",
+        "id": "NBO_004",
+        "name": "Embakasi",
         "pm25": 89.5,
-        "source_type": "monitoring_station",
-        "recorded_at": "2025-08-19T00:37:17.335980",
-        "quality_flag": 3,
         "aqi_category": "Very Unhealthy",
+        "data_quality": "High",
+        "last_updated": "2025-08-17T10:30:00Z",
         "severity": "very_unhealthy",
-        "aqi": 185
+        "aqi": 223,
+        "health_impact": "Very Unhealthy"
       }
     },
     {
@@ -91,21 +95,16 @@
         ]
       },
       "properties": {
-        "id": "nairobi_zone_5",
+        "id": "NBO_005",
+        "name": "Karen",
         "pm25": 18.7,
-        "source_type": "monitoring_station",
-        "recorded_at": "2025-08-19T00:37:17.335980",
-        "quality_flag": 1,
         "aqi_category": "Good",
-        "severity": "good",
-        "aqi": 62
+        "data_quality": "High",
+        "last_updated": "2025-08-17T10:30:00Z",
+        "severity": "moderate",
+        "aqi": 68,
+        "health_impact": "Moderate"
       }
     }
-  ],
-  "metadata": {
-    "total_zones": 5,
-    "city": "Nairobi",
-    "country": "Kenya",
-    "generated_at": "2025-08-19T00:37:17.335980"
-  }
+  ]
 }

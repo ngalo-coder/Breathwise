@@ -7,9 +7,10 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "build": "echo 'No build step required'",
+    "build": "echo 'No build step required for Node.js'",
     "test": "jest",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "health": "curl http://localhost:$PORT/health || echo 'Health check failed'"
   },
   "engines": {
     "node": "18.x",
@@ -21,10 +22,7 @@
     "helmet": "^7.0.0",
     "morgan": "^1.10.0",
     "dotenv": "^16.3.1",
-    "pg": "^8.11.3",
-    "redis": "^4.6.8",
     "socket.io": "^4.7.2",
-    "auth0": "^4.0.1",
     "express-rate-limit": "^6.10.0",
     "joi": "^17.9.2"
   },
@@ -37,8 +35,9 @@
     "unep",
     "air-quality",
     "policy",
-    "geospatial",
-    "environmental"
+    "environmental",
+    "africa",
+    "nairobi"
   ],
   "author": "UNEP",
   "license": "MIT"
