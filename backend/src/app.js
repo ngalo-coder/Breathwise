@@ -10,6 +10,7 @@ import rateLimit from 'express-rate-limit';
 // Import routes
 import airRoutes from './routes/air.routes.js';
 import policyRoutes from './routes/policy.routes.js';
+import satelliteRoutes from './routes/satellite.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -100,6 +101,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/air', airRoutes);
 app.use('/api/policy', policyRoutes);
+app.use('/api/satellite', satelliteRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -109,7 +111,8 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       air_quality: '/api/air/*',
-      policy: '/api/policy/*'
+      policy: '/api/policy/*',
+      satellite: '/api/satellite/*'
     },
     documentation: '/api/docs'
   });
@@ -168,7 +171,8 @@ app.use('*', (req, res) => {
     available_routes: {
       health: '/health',
       air_quality: '/api/air/*',
-      policy: '/api/policy/*'
+      policy: '/api/policy/*',
+      satellite: '/api/satellite/*'
     }
   });
 });

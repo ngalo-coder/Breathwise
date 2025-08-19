@@ -18,9 +18,28 @@ import {
   Tabs,
   Tab,
   Button,
-  IconButton
+  IconButton,
+  LinearProgress,
+  Badge,
+  Tooltip,
+  Divider
 } from '@mui/material';
-import { Refresh, Download, Map, BarChart, Warning } from '@mui/icons-material';
+import {
+  Refresh,
+  Download,
+  Map,
+  BarChart,
+  Warning,
+  Info,
+  Air,
+  TrendingUp,
+  Policy,
+  HealthAndSafety,
+  Timeline,
+  CheckCircle,
+  Error,
+  Report
+} from '@mui/icons-material';
 import axios from 'axios';
 import AirQualityMap from './AirQualityMap';
 import AirQualityCharts from './AirQualityCharts';
@@ -288,23 +307,58 @@ const EnhancedNairobiDashboard: React.FC = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
-          🌍 UNEP Nairobi Air Quality Platform
-        </Typography>
-        <Box>
-          <IconButton onClick={fetchData} disabled={loading}>
-            <Refresh />
-          </IconButton>
-          <Button 
-            startIcon={<Download />} 
-            onClick={exportData}
-            variant="outlined"
-            sx={{ ml: 1 }}
-          >
-            Export Data
-          </Button>
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{
+              bgcolor: 'primary.main',
+              color: 'white',
+              p: 1,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <Air sx={{ mr: 1 }} />
+              <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                UNEP Air Quality Platform
+              </Typography>
+            </Box>
+            <Badge
+              badgeContent={usingMockData ? "Demo Mode" : "Live Data"}
+              color={usingMockData ? "warning" : "success"}
+              sx={{
+                '& .MuiBadge-badge': {
+                  fontSize: '0.75rem',
+                  height: '20px',
+                  minWidth: '70px'
+                }
+              }}
+            >
+              <Info sx={{ color: 'text.secondary' }} />
+            </Badge>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title="Refresh Data">
+              <IconButton onClick={fetchData} disabled={loading} size="small">
+                <Refresh />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Export Data">
+              <Button
+                startIcon={<Download />}
+                onClick={exportData}
+                variant="outlined"
+                size="small"
+                sx={{ minWidth: 100 }}
+              >
+                Export
+              </Button>
+            </Tooltip>
+          </Box>
         </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+          Real-time air quality monitoring and policy recommendations for Nairobi, Kenya
+        </Typography>
       </Box>
 
       {/* Data Source Alert */}
@@ -346,65 +400,148 @@ const EnhancedNairobiDashboard: React.FC = () => {
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ position: 'relative' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Average PM2.5
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box sx={{
+                  bgcolor: avgPM25 > 35 ? 'error.light' : avgPM25 > 15 ? 'warning.light' : 'success.light',
+                  p: 1,
+                  borderRadius: 1,
+                  mr: 2
+                }}>
+                  <Air sx={{ color: avgPM25 > 35 ? 'error.main' : avgPM25 > 15 ? 'warning.main' : 'success.main' }} />
+                </Box>
+                <Typography color="textSecondary" variant="body2">
+                  Air Quality Index
+                </Typography>
+              </Box>
               <Typography variant="h4" color={avgPM25 > 35 ? 'error' : avgPM25 > 15 ? 'warning' : 'success'}>
                 {avgPM25.toFixed(1)} μg/m³
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                WHO Guideline: 15 μg/m³
+                WHO: 15 μg/m³
               </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min((avgPM25 / 60) * 100, 100)}
+                sx={{
+                  mt: 1,
+                  height: 4,
+                  borderRadius: 2,
+                  bgcolor: 'grey.200'
+                }}
+              />
             </CardContent>
           </Card>
         </Grid>
         
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ position: 'relative' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Monitoring Zones
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box sx={{
+                  bgcolor: 'primary.light',
+                  p: 1,
+                  borderRadius: 1,
+                  mr: 2
+                }}>
+                  <Map sx={{ color: 'primary.main' }} />
+                </Box>
+                <Typography color="textSecondary" variant="body2">
+                  Monitoring Zones
+                </Typography>
+              </Box>
               <Typography variant="h4" color="primary">
                 {zones.length}
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Active monitoring stations
+                Active stations
               </Typography>
+              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                <Chip
+                  label="CBD"
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                />
+                <Chip
+                  label="Industrial"
+                  size="small"
+                  variant="outlined"
+                  color="error"
+                />
+                <Chip
+                  label="Residential"
+                  size="small"
+                  variant="outlined"
+                  color="success"
+                />
+              </Box>
             </CardContent>
           </Card>
         </Grid>
         
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ position: 'relative' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Unhealthy Zones
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box sx={{
+                  bgcolor: 'error.light',
+                  p: 1,
+                  borderRadius: 1,
+                  mr: 2
+                }}>
+                  <Warning sx={{ color: 'error.main' }} />
+                </Box>
+                <Typography color="textSecondary" variant="body2">
+                  Health Alert Zones
+                </Typography>
+              </Box>
               <Typography variant="h4" color="error">
                 {unhealthyZones}
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Require immediate attention
+                Require attention
               </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="caption" color="text.secondary">
+                  Last update: {lastUpdate.toLocaleTimeString()}
+                </Typography>
+              </Box>
             </CardContent>
           </Card>
         </Grid>
         
         <Grid item xs={12} md={3}>
-          <Card>
+          <Card sx={{ position: 'relative' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom>
-                Policy Actions
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Box sx={{
+                  bgcolor: 'warning.light',
+                  p: 1,
+                  borderRadius: 1,
+                  mr: 2
+                }}>
+                  <Policy sx={{ color: 'warning.main' }} />
+                </Box>
+                <Typography color="textSecondary" variant="body2">
+                  Policy Actions
+                </Typography>
+              </Box>
               <Typography variant="h4" color="warning">
                 {policies.length}
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Recommended interventions
+                Interventions
               </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Chip
+                  label="High Priority"
+                  size="small"
+                  color="error"
+                  variant="outlined"
+                />
+              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -412,11 +549,31 @@ const EnhancedNairobiDashboard: React.FC = () => {
 
       {/* Tabs for different views */}
       <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
-          <Tab icon={<Map />} label="Interactive Map" />
-          <Tab icon={<BarChart />} label="Data Analysis" />
-          <Tab label="Zone Details" />
-          <Tab label="Policy Actions" />
+        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ minHeight: 64 }}>
+          <Tab
+            icon={<Map />}
+            label="Interactive Map"
+            iconPosition="start"
+            sx={{ minWidth: 150 }}
+          />
+          <Tab
+            icon={<BarChart />}
+            label="Data Analysis"
+            iconPosition="start"
+            sx={{ minWidth: 150 }}
+          />
+          <Tab
+            icon={<Report />}
+            label="Zone Details"
+            iconPosition="start"
+            sx={{ minWidth: 150 }}
+          />
+          <Tab
+            icon={<Policy />}
+            label="Policy Actions"
+            iconPosition="start"
+            sx={{ minWidth: 150 }}
+          />
         </Tabs>
       </Paper>
 
@@ -455,22 +612,22 @@ const EnhancedNairobiDashboard: React.FC = () => {
                     </TableCell>
                     <TableCell>{zone.aqi}</TableCell>
                     <TableCell>
-                      <Chip 
-                        label={zone.aqi_category} 
+                      <Chip
+                        label={zone.aqi_category}
                         color={getSeverityColor(zone.severity) as any}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={zone.severity.replace('_', ' ')} 
+                      <Chip
+                        label={zone.severity.replace('_', ' ')}
                         variant="outlined"
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      {zone.recorded_at ? 
-                        new Date(zone.recorded_at).toLocaleString() : 
+                      {zone.recorded_at ?
+                        new Date(zone.recorded_at).toLocaleString() :
                         'N/A'
                       }
                     </TableCell>
@@ -499,8 +656,8 @@ const EnhancedNairobiDashboard: React.FC = () => {
                     <Typography variant="h6">
                       {policy.title}
                     </Typography>
-                    <Chip 
-                      label={policy.priority} 
+                    <Chip
+                      label={policy.priority}
                       color={getPriorityColor(policy.priority) as any}
                       size="small"
                     />
@@ -538,31 +695,65 @@ const EnhancedNairobiDashboard: React.FC = () => {
         </Paper>
       )}
 
+
       {/* Platform Status */}
-      <Paper sx={{ p: 2, mt: 3, bgcolor: usingMockData ? 'warning.light' : 'success.light' }}>
-        <Typography variant="h6" gutterBottom>
-          🚀 Platform Status
-        </Typography>
+      <Paper sx={{ p: 3, mt: 3, bgcolor: usingMockData ? 'warning.light' : 'success.light' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          {usingMockData ? (
+            <Warning sx={{ color: 'warning.main', mr: 2 }} />
+          ) : (
+            <CheckCircle sx={{ color: 'success.main', mr: 2 }} />
+          )}
+          <Typography variant="h6">
+            {usingMockData ? '🔧 Demo Mode' : '✅ Live Data Connected'}
+          </Typography>
+        </Box>
+        
         {usingMockData ? (
           <Box>
             <Typography variant="body2" paragraph>
-              <strong>Demo Mode:</strong> Your UNEP Air Quality Platform is fully functional with simulated Nairobi data!
+              <strong>Demo Mode Active:</strong> Your UNEP Air Quality Platform is fully functional with simulated Nairobi data!
             </Typography>
-            <Typography variant="body2" paragraph>
-              <strong>Next Steps:</strong>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              <strong>Next Steps to Deploy:</strong>
             </Typography>
-            <Typography variant="body2" component="div">
-              • Deploy your backend API with the required endpoints:<br/>
-              &nbsp;&nbsp;- <code>GET /api/air/nairobi-zones</code><br/>
-              &nbsp;&nbsp;- <code>GET /api/policy/recommendations</code><br/>
-              • Update your API base URL in the environment variables<br/>
-              • All charts, tables, and features are working perfectly!
-            </Typography>
+            <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 1, fontSize: '0.875rem' }}>
+              <Typography variant="body2" component="div">
+                • Deploy your backend API with required endpoints:<br/>
+                &nbsp;&nbsp;- <code>GET /api/air/nairobi-zones</code><br/>
+                &nbsp;&nbsp;- <code>GET /api/policy/recommendations</code><br/>
+                • Update your API base URL in environment variables<br/>
+                • All charts, tables, and features are working perfectly!
+              </Typography>
+            </Box>
           </Box>
         ) : (
-          <Typography variant="body2">
-            ✅ <strong>Live Data Connected:</strong> Your platform is successfully connected to the UNEP air quality API and displaying real-time data from Nairobi monitoring stations.
-          </Typography>
+          <Box>
+            <Typography variant="body2" paragraph>
+              <strong>Live Data Connected:</strong> Your platform is successfully connected to the UNEP air quality API and displaying real-time data from Nairobi monitoring stations.
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
+              <Chip
+                label="API Healthy"
+                color="success"
+                size="small"
+                icon={<CheckCircle sx={{ fontSize: 16 }} />}
+              />
+              <Chip
+                label="Real-time Updates"
+                color="primary"
+                size="small"
+                icon={<Timeline sx={{ fontSize: 16 }} />}
+              />
+              <Chip
+                label="Data Fresh"
+                color="info"
+                size="small"
+                icon={<TrendingUp sx={{ fontSize: 16 }} />}
+              />
+            </Box>
+          </Box>
         )}
       </Paper>
     </Box>
