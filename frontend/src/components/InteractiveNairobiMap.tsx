@@ -34,10 +34,10 @@ const InteractiveNairobiMap: React.FC = () => {
 
   useEffect(() => {
     // Fetch monitoring zones
-    fetch('http://localhost:8001/api/air/nairobi-zones')
+    fetch('/api/air/nairobi-zones')
       .then(res => res.json())
       .then(data => {
-        const formattedZones = data.map((zone: any) => ({
+        const formattedZones = data.features.map((zone: any) => ({
           id: zone.id,
           name: zone.name,
           latitude: zone.latitude,
@@ -112,10 +112,11 @@ const InteractiveNairobiMap: React.FC = () => {
     });
 
     // Handle click events
-    view.on('click', (event) => {
-      view.hitTest(event).then(response => {
-        if (response.results.length > 0) {
-          const graphic = response.results[0].graphic;
+    view.on('click', (event: __esri.ViewClickEvent) => {
+      view.hitTest(event).then((response: __esri.HitTestResult) => {
+        const graphicHit = response.results.find(result => result.type === 'graphic') as __esri.GraphicHit | undefined;
+        if (graphicHit) {
+          const graphic = graphicHit.graphic;
           if (graphic.attributes) {
             setSelectedZone(graphic.attributes);
           }
