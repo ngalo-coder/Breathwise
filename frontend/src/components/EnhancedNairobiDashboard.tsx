@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LeafletMap from './LeafletMap';
 import {
   Box,
   Grid,
@@ -38,18 +39,18 @@ import {
   Timeline,
   CheckCircle,
   Error,
-  Report
+  Report,
+  Satellite // <-- Added Satellite icon
 } from '@mui/icons-material';
 import axios from 'axios';
-import AirQualityMap from './AirQualityMap';
 import AirQualityCharts from './AirQualityCharts';
+import SatelliteDataTab from './SatelliteDataTab'; // <-- Import SatelliteDataTab
 
 // Placeholder for new components
 const InteractiveNairobiMap = () => <Box><Typography>Interactive Nairobi Map Component</Typography></Box>;
 const PredictiveAnalytics = () => <Box><Typography>Predictive Analytics Component</Typography></Box>;
 const ZoneDetailsTable = () => <Box><Typography>Zone Details Table Component</Typography></Box>;
 const PolicyActionsTable = () => <Box><Typography>Policy Actions Table Component</Typography></Box>;
-
 
 interface MonitoringZone {
   id: string;
@@ -559,6 +560,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
         <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
           <Tab icon={<Map />} label="Interactive Map" />
           <Tab icon={<BarChart />} label="Data Analysis" />
+          <Tab icon={<Satellite />} label="Satellite Data" />
           <Tab label="Zone Details" />
           <Tab label="Policy Actions" />
         </Tabs>
@@ -566,7 +568,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
 
       {/* Tab Content */}
       {tabValue === 0 && (
-        <AirQualityMap zones={zones} />
+        <LeafletMap zones={zones} />
       )}
 
       {tabValue === 1 && (
@@ -574,6 +576,10 @@ const EnhancedNairobiDashboard: React.FC = () => {
       )}
 
       {tabValue === 2 && (
+        <SatelliteDataTab />
+      )}
+
+      {tabValue === 3 && (
         <Paper sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
             📍 Monitoring Zone Details
@@ -626,7 +632,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
         </Paper>
       )}
 
-      {tabValue === 3 && (
+      {tabValue === 4 && (
         <Paper sx={{ p: 2 }}>
           <Typography variant="h6" gutterBottom>
             📋 Policy Recommendations
@@ -681,7 +687,6 @@ const EnhancedNairobiDashboard: React.FC = () => {
           )}
         </Paper>
       )}
-
 
       {/* Platform Status */}
       <Paper sx={{ p: 3, mt: 3, bgcolor: usingMockData ? 'warning.light' : 'success.light' }}>
