@@ -87,7 +87,7 @@ const generateMockZones = (): MonitoringZone[] => {
       severity,
       aqi,
       recorded_at: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-      geometry: { coordinates: zone.coords }
+      geometry: { coordinates: [zone.coords[0], zone.coords[1]] as [number, number] }
     };
   });
 };
