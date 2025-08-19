@@ -44,6 +44,13 @@ import axios from 'axios';
 import AirQualityMap from './AirQualityMap';
 import AirQualityCharts from './AirQualityCharts';
 
+// Placeholder for new components
+const InteractiveNairobiMap = () => <Box><Typography>Interactive Nairobi Map Component</Typography></Box>;
+const PredictiveAnalytics = () => <Box><Typography>Predictive Analytics Component</Typography></Box>;
+const ZoneDetailsTable = () => <Box><Typography>Zone Details Table Component</Typography></Box>;
+const PolicyActionsTable = () => <Box><Typography>Policy Actions Table Component</Typography></Box>;
+
+
 interface MonitoringZone {
   id: string;
   pm25: number;
@@ -178,9 +185,9 @@ const EnhancedNairobiDashboard: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       console.log('Attempting to fetch data from API...');
-      
+
       // Try to fetch monitoring zones
       try {
         const zonesResponse = await axios.get('/api/air/nairobi-zones', {
@@ -190,9 +197,9 @@ const EnhancedNairobiDashboard: React.FC = () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         console.log('Zones API response:', zonesResponse.data);
-        
+
         const zonesData = zonesResponse.data.features?.map((feature: any) => ({
           id: feature.properties.id,
           pm25: feature.properties.pm25,
@@ -202,10 +209,10 @@ const EnhancedNairobiDashboard: React.FC = () => {
           recorded_at: feature.properties.recorded_at,
           geometry: feature.geometry
         })) || [];
-        
+
         setZones(zonesData);
         setUsingMockData(false);
-        
+
       } catch (zonesError) {
         console.warn('Failed to fetch zones from API, using mock data:', zonesError);
         setZones(generateMockZones());
@@ -217,10 +224,10 @@ const EnhancedNairobiDashboard: React.FC = () => {
         const policiesResponse = await axios.get('/api/policy/recommendations', {
           timeout: 10000
         });
-        
+
         console.log('Policies API response:', policiesResponse.data);
         setPolicies(policiesResponse.data.recommendations || []);
-        
+
       } catch (policiesError) {
         console.warn('Failed to fetch policies from API, using mock data:', policiesError);
         setPolicies(mockPolicies);
@@ -229,7 +236,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
 
       setLastUpdate(new Date());
       setError(null);
-      
+
     } catch (err) {
       console.error('Dashboard fetch error:', err);
       // Use mock data as fallback
@@ -254,7 +261,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
         unhealthy_zones: zones.filter(z => z.pm25 > 35).length
       }
     };
-    
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -434,7 +441,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={3}>
           <Card sx={{ position: 'relative' }}>
             <CardContent>
@@ -480,7 +487,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={3}>
           <Card sx={{ position: 'relative' }}>
             <CardContent>
@@ -511,7 +518,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={3}>
           <Card sx={{ position: 'relative' }}>
             <CardContent>
@@ -549,31 +556,11 @@ const EnhancedNairobiDashboard: React.FC = () => {
 
       {/* Tabs for different views */}
       <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} sx={{ minHeight: 64 }}>
-          <Tab
-            icon={<Map />}
-            label="Interactive Map"
-            iconPosition="start"
-            sx={{ minWidth: 150 }}
-          />
-          <Tab
-            icon={<BarChart />}
-            label="Data Analysis"
-            iconPosition="start"
-            sx={{ minWidth: 150 }}
-          />
-          <Tab
-            icon={<Report />}
-            label="Zone Details"
-            iconPosition="start"
-            sx={{ minWidth: 150 }}
-          />
-          <Tab
-            icon={<Policy />}
-            label="Policy Actions"
-            iconPosition="start"
-            sx={{ minWidth: 150 }}
-          />
+        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+          <Tab icon={<Map />} label="Interactive Map" />
+          <Tab icon={<BarChart />} label="Data Analysis" />
+          <Tab label="Zone Details" />
+          <Tab label="Policy Actions" />
         </Tabs>
       </Paper>
 
@@ -612,22 +599,22 @@ const EnhancedNairobiDashboard: React.FC = () => {
                     </TableCell>
                     <TableCell>{zone.aqi}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={zone.aqi_category}
+                      <Chip 
+                        label={zone.aqi_category} 
                         color={getSeverityColor(zone.severity) as any}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={zone.severity.replace('_', ' ')}
+                      <Chip 
+                        label={zone.severity.replace('_', ' ')} 
                         variant="outlined"
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
-                      {zone.recorded_at ?
-                        new Date(zone.recorded_at).toLocaleString() :
+                      {zone.recorded_at ? 
+                        new Date(zone.recorded_at).toLocaleString() : 
                         'N/A'
                       }
                     </TableCell>
@@ -656,8 +643,8 @@ const EnhancedNairobiDashboard: React.FC = () => {
                     <Typography variant="h6">
                       {policy.title}
                     </Typography>
-                    <Chip
-                      label={policy.priority}
+                    <Chip 
+                      label={policy.priority} 
                       color={getPriorityColor(policy.priority) as any}
                       size="small"
                     />

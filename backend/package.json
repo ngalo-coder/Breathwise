@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
+    "dev": "PORT=3001 nodemon src/app.js",
     "build": "echo 'No build step required for Node.js'",
     "test": "jest",
     "lint": "eslint src/",
