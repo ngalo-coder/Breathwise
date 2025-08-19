@@ -25,6 +25,13 @@ import axios from 'axios';
 import AirQualityMap from './AirQualityMap';
 import AirQualityCharts from './AirQualityCharts';
 
+// Placeholder for new components
+const InteractiveNairobiMap = () => <Box><Typography>Interactive Nairobi Map Component</Typography></Box>;
+const PredictiveAnalytics = () => <Box><Typography>Predictive Analytics Component</Typography></Box>;
+const ZoneDetailsTable = () => <Box><Typography>Zone Details Table Component</Typography></Box>;
+const PolicyActionsTable = () => <Box><Typography>Policy Actions Table Component</Typography></Box>;
+
+
 interface MonitoringZone {
   id: string;
   pm25: number;
@@ -159,9 +166,9 @@ const EnhancedNairobiDashboard: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       console.log('Attempting to fetch data from API...');
-      
+
       // Try to fetch monitoring zones
       try {
         const zonesResponse = await axios.get('/api/air/nairobi-zones', {
@@ -171,9 +178,9 @@ const EnhancedNairobiDashboard: React.FC = () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         console.log('Zones API response:', zonesResponse.data);
-        
+
         const zonesData = zonesResponse.data.features?.map((feature: any) => ({
           id: feature.properties.id,
           pm25: feature.properties.pm25,
@@ -183,10 +190,10 @@ const EnhancedNairobiDashboard: React.FC = () => {
           recorded_at: feature.properties.recorded_at,
           geometry: feature.geometry
         })) || [];
-        
+
         setZones(zonesData);
         setUsingMockData(false);
-        
+
       } catch (zonesError) {
         console.warn('Failed to fetch zones from API, using mock data:', zonesError);
         setZones(generateMockZones());
@@ -198,10 +205,10 @@ const EnhancedNairobiDashboard: React.FC = () => {
         const policiesResponse = await axios.get('/api/policy/recommendations', {
           timeout: 10000
         });
-        
+
         console.log('Policies API response:', policiesResponse.data);
         setPolicies(policiesResponse.data.recommendations || []);
-        
+
       } catch (policiesError) {
         console.warn('Failed to fetch policies from API, using mock data:', policiesError);
         setPolicies(mockPolicies);
@@ -210,7 +217,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
 
       setLastUpdate(new Date());
       setError(null);
-      
+
     } catch (err) {
       console.error('Dashboard fetch error:', err);
       // Use mock data as fallback
@@ -235,7 +242,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
         unhealthy_zones: zones.filter(z => z.pm25 > 35).length
       }
     };
-    
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -360,7 +367,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
@@ -376,7 +383,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
@@ -392,7 +399,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
@@ -417,6 +424,7 @@ const EnhancedNairobiDashboard: React.FC = () => {
           <Tab icon={<BarChart />} label="Data Analysis" />
           <Tab label="Zone Details" />
           <Tab label="Policy Actions" />
+          <Tab label="Predictive Analytics" /> {/* New Tab */}
         </Tabs>
       </Paper>
 
@@ -430,112 +438,15 @@ const EnhancedNairobiDashboard: React.FC = () => {
       )}
 
       {tabValue === 2 && (
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            📍 Monitoring Zone Details
-          </Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Zone</TableCell>
-                  <TableCell>PM2.5 (μg/m³)</TableCell>
-                  <TableCell>AQI</TableCell>
-                  <TableCell>Health Impact</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Last Updated</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {zones.map((zone) => (
-                  <TableRow key={zone.id}>
-                    <TableCell>{zone.id.replace('nairobi_zone_', '').replace(/_/g, ' ').toUpperCase()}</TableCell>
-                    <TableCell>
-                      <strong>{zone.pm25?.toFixed(1) || 'N/A'}</strong>
-                    </TableCell>
-                    <TableCell>{zone.aqi}</TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={zone.aqi_category} 
-                        color={getSeverityColor(zone.severity) as any}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip 
-                        label={zone.severity.replace('_', ' ')} 
-                        variant="outlined"
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {zone.recorded_at ? 
-                        new Date(zone.recorded_at).toLocaleString() : 
-                        'N/A'
-                      }
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+        <ZoneDetailsTable />
       )}
 
       {tabValue === 3 && (
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            📋 Policy Recommendations
-          </Typography>
-          {policies.length === 0 ? (
-            <Alert severity="info">
-              No policy recommendations available.
-            </Alert>
-          ) : (
-            policies.map((policy) => (
-              <Card key={policy.id} sx={{ mb: 2 }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography variant="h6">
-                      {policy.title}
-                    </Typography>
-                    <Chip 
-                      label={policy.priority} 
-                      color={getPriorityColor(policy.priority) as any}
-                      size="small"
-                    />
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {policy.description}
-                  </Typography>
-                  <Grid container spacing={2} sx={{ mb: 2 }}>
-                    <Grid item xs={6}>
-                      <Typography variant="body2">
-                        <strong>Expected Impact:</strong> {policy.expected_impact_percent}%
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="body2">
-                        <strong>Cost:</strong> ${policy.cost_estimate?.toLocaleString()}
-                      </Typography>
-                    </Grid>
-                  </Grid>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button variant="contained" size="small" color="primary">
-                      Approve
-                    </Button>
-                    <Button variant="outlined" size="small">
-                      Simulate Impact
-                    </Button>
-                    <Button variant="text" size="small">
-                      View Details
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </Paper>
+        <PolicyActionsTable />
+      )}
+
+      {tabValue === 4 && (
+        <PredictiveAnalytics />
       )}
 
       {/* Platform Status */}
