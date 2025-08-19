@@ -27,8 +27,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          mui: ['@mui/material', '@mui/icons-material'],
-          arcgis: ['@arcgis/core']
+          mui: ['@mui/material', '@mui/icons-material']
+          // Note: Removed arcgis reference since @arcgis/core is not installed
         }
       }
     },
