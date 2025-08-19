@@ -4,12 +4,16 @@ import { Paper, Typography, Box, Chip } from '@mui/material';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix default markers
+// Fix default markers for Leaflet in React
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 });
 
 interface MonitoringZone {
@@ -93,11 +97,13 @@ const LeafletMap: React.FC<AirQualityMapProps> = ({ zones }) => {
               <Circle
                 center={[lat, lng]}
                 radius={getRadiusByPM25(pm25)}
-                fillColor={getColorByPM25(pm25)}
-                color={getColorByPM25(pm25)}
-                weight={2}
-                opacity={0.7}
-                fillOpacity={0.2}
+                pathOptions={{
+                  fillColor: getColorByPM25(pm25),
+                  color: getColorByPM25(pm25),
+                  weight: 2,
+                  opacity: 0.7,
+                  fillOpacity: 0.2,
+                }}
               />
               
               {/* Marker with popup */}
@@ -130,5 +136,7 @@ const LeafletMap: React.FC<AirQualityMapProps> = ({ zones }) => {
         })}
       </MapContainer>
     </Paper>
-)
+  );
 };
+
+export default LeafletMap;
