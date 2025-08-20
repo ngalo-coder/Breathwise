@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "cross-env PORT=8000 nodemon src/app.js",
+    "dev": "nodemon src/app.js",
     "dev:debug": "cross-env PORT=8000 DEBUG=* nodemon src/app.js",
     "build": "echo 'No build step required for Node.js'",
     "test": "jest",
