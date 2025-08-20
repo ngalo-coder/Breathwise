@@ -1,30 +1,38 @@
 {
   "name": "unep-air-platform-backend",
-  "version": "2.0.0",
-  "description": "UNEP Air Quality Policy Platform API - Production Ready with Real Data Integration",
+  "version": "2.1.0",
+  "description": "UNEP Air Quality Policy Platform API - AI-Enhanced Production Ready with Real Data Integration",
   "main": "src/app.js",
   "type": "module",
   "scripts": {
     "start": "node src/app.js",
     "dev": "cross-env PORT=8000 nodemon src/app.js",
+    "dev:debug": "cross-env PORT=8000 DEBUG=* nodemon src/app.js",
     "build": "echo 'No build step required for Node.js'",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "health": "curl http://localhost:$PORT/health || echo 'Health check failed'",
+    "health": "curl http://localhost:${PORT:-8000}/health || echo 'Health check failed'",
     "check-apis": "node scripts/check-api-connectivity.js",
     "migrate": "node scripts/migrate-database.js",
+    "migrate:ai": "node scripts/migrate-ai-tables.js",
     "seed": "node scripts/seed-database.js",
+    "seed:ai": "node scripts/seed-ai-data.js",
     "backup": "node scripts/backup-data.js",
-    "deploy": "npm run lint && npm test && echo 'Ready for deployment'"
+    "cleanup": "node scripts/cleanup-old-data.js",
+    "ai:test": "node scripts/test-ai-integration.js",
+    "deploy": "npm run lint && npm test && echo 'Ready for deployment'",
+    "performance:test": "node scripts/performance-test.js",
+    "monitoring:start": "node scripts/start-monitoring.js"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "axios": "^1.6.0",
+    "axios": "^1.6.2",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -54,7 +62,16 @@
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "nodemailer": "^6.9.7",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "ml-kmeans": "^6.0.0",
+    "ml-dbscan": "^2.0.0",
+    "simple-statistics": "^7.8.3",
+    "mathjs": "^12.1.0",
+    "date-fns": "^2.30.0",
+    "date-fns-tz": "^2.0.0",
+    "bull": "^4.12.0",
+    "prom-client": "^15.0.0",
+    "express-prometheus-middleware": "^1.2.0"
   },
   "devDependencies": {
     "eslint": "^8.54.0",
@@ -65,7 +82,79 @@
     "prettier": "^3.1.0",
     "cross-env": "^7.0.3",
     "supertest": "^6.3.3",
-    "@types/node": "^20.9.0"
+    "@types/node": "^20.9.0",
+    "artillery": "^2.0.3",
+    "clinic": "^12.1.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/tests/",
+      "/scripts/"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    }
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "es2022": true,
+      "jest": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "prettier"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 2022,
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-console": "off",
+      "no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ],
+      "prefer-const": "error",
+      "no-var": "error",
+      "object-shorthand": "error",
+      "prefer-template": "error"
+    }
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src/"
+    ],
+    "ext": "js,json",
+    "ignore": [
+      "src/**/*.test.js",
+      "coverage/",
+      "node_modules/"
+    ],
+    "env": {
+      "NODE_ENV": "development"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint && npm test",
+      "pre-push": "npm run test:coverage"
+    }
   },
   "keywords": [
     "unep",
@@ -81,9 +170,20 @@
     "copernicus",
     "sentinel-5p",
     "openaq",
-    "weatherapi"
+    "weatherapi",
+    "ai-powered",
+    "machine-learning",
+    "openrouter",
+    "claude",
+    "policy-recommendations",
+    "early-warning",
+    "hotspot-detection",
+    "environmental-monitoring",
+    "public-health",
+    "hackathon",
+    "innovation"
   ],
-  "author": "UNEP",
+  "author": "UNEP Environmental Monitoring Team",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -92,32 +192,5 @@
   "bugs": {
     "url": "https://github.com/ngalo-coder/breathwise/issues"
   },
-  "homepage": "https://github.com/ngalo-coder/breathwise#readme",
-  "jest": {
-    "testEnvironment": "node",
-    "collectCoverage": true,
-    "coverageDirectory": "coverage",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/tests/"
-    ]
-  },
-  "eslintConfig": {
-    "env": {
-      "node": true,
-      "es2022": true
-    },
-    "extends": [
-      "eslint:recommended",
-      "prettier"
-    ],
-    "parserOptions": {
-      "ecmaVersion": 2022,
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-console": "off",
-      "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
-    }
-  }
+  "homepage": "https://github.com/ngalo-coder/breathwise#readme"
 }
