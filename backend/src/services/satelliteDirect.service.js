@@ -47,14 +47,14 @@ class DirectSatelliteService {
         location: 'Nairobi, Kenya',
         bbox: nairobiBox,
         sources: {
-          satellite_no2: this.generateSentinel5PMockData(nairobiBox),
-          ground_stations: openAQData.status === 'fulfilled' ? openAQData.value : this.generateMockGroundStationData(),
-          weather: weatherData.status === 'fulfilled' ? weatherData.value : this.generateMockWeatherData()
+          satellite_no2: this.generateEmptySatelliteData(),
+          ground_stations: openAQData.status === 'fulfilled' ? openAQData.value : this.generateEmptyGroundStationData(),
+          weather: weatherData.status === 'fulfilled' ? weatherData.value : this.generateEmptyWeatherData()
         },
         processed_data: this.processAndFuseData({
-          satellite: this.generateSentinel5PMockData(nairobiBox),
-          ground: openAQData.status === 'fulfilled' ? openAQData.value : this.generateMockGroundStationData(),
-          weather: weatherData.status === 'fulfilled' ? weatherData.value : this.generateMockWeatherData()
+          satellite: this.generateEmptySatelliteData(),
+          ground: openAQData.status === 'fulfilled' ? openAQData.value : this.generateEmptyGroundStationData(),
+          weather: weatherData.status === 'fulfilled' ? weatherData.value : this.generateEmptyWeatherData()
         })
       };
 
@@ -65,7 +65,7 @@ class DirectSatelliteService {
 
     } catch (error) {
       console.error('❌ Error fetching satellite data:', error);
-      return this.generateMockNairobiData();
+      return this.generateEmptyNairobiData();
     }
   }
 
@@ -96,184 +96,59 @@ class DirectSatelliteService {
       };
 
     } catch (error) {
-      console.warn('⚠️ OpenAQ unavailable, using mock data');
-      return this.generateMockGroundStationData();
+      console.warn('⚠️ OpenAQ unavailable, returning empty data');
+      return this.generateEmptyGroundStationData();
     }
   }
 
   // Fetch weather data
   async fetchWeatherData() {
-  try {
-    const weatherData = await weatherService.getNairobiWeather();
-    if (weatherData.success) {
-      return weatherData.summary;
-    } else {
-      throw new Error('Weather API failed');
-    }
-  } catch (error) {
-    console.warn('⚠️ Weather API unavailable, using mock data');
-    return weatherService.generateMockWeatherData().summary;
-  }
-}
-
-  // Generate realistic Sentinel-5P mock data
-  generateSentinel5PMockData(bbox) {
-    const [minLon, minLat, maxLon, maxLat] = bbox;
-    const gridSize = 0.02; // ~2km resolution
-    const measurements = [];
-
-    // Generate measurements across Nairobi with realistic NO2 patterns
-    for (let lat = minLat; lat <= maxLat; lat += gridSize) {
-      for (let lon = minLon; lon <= maxLon; lon += gridSize) {
-        // Higher NO2 near CBD and industrial areas
-        let no2_concentration = this.calculateNO2ForLocation(lat, lon);
-        
-        // Add some random variation
-        no2_concentration *= (0.8 + Math.random() * 0.4);
-        
-        measurements.push({
-          latitude: lat,
-          longitude: lon,
-          no2_tropospheric: no2_concentration, // mol/m²
-          qa_value: 0.7 + Math.random() * 0.3, // Quality assurance
-          cloud_fraction: Math.random() * 0.3, // Low cloud cover
-          observation_time: new Date().toISOString()
-        });
+    try {
+      const weatherData = await weatherService.getNairobiWeather();
+      if (weatherData.success) {
+        return weatherData.summary;
+      } else {
+        throw new Error('Weather API failed');
       }
+    } catch (error) {
+      console.warn('⚠️ Weather API unavailable, returning empty data');
+      return this.generateEmptyWeatherData();
     }
+  }
 
+  // Generate empty satellite data instead of mock data
+  generateEmptySatelliteData() {
     return {
       satellite: 'Sentinel-5P',
       product_type: 'NO2_tropospheric',
-      measurements_count: measurements.length,
+      measurements_count: 0,
       acquisition_time: new Date().toISOString(),
-      measurements
+      measurements: [],
+      status: 'unavailable',
+      error: 'Satellite data not accessible'
     };
   }
 
-  // Calculate realistic NO2 values based on Nairobi geography
-  calculateNO2ForLocation(lat, lon) {
-    // Nairobi CBD (high traffic)
-    if (this.isNearLocation(lat, lon, -1.2921, 36.8219, 0.02)) {
-      return 8e-5 + Math.random() * 4e-5; // High NO2
-    }
-    
-    // Industrial Area
-    if (this.isNearLocation(lat, lon, -1.3031, 36.8592, 0.015)) {
-      return 6e-5 + Math.random() * 3e-5; // Moderate-high NO2
-    }
-    
-    // Jomo Kenyatta Airport (aircraft emissions)
-    if (this.isNearLocation(lat, lon, -1.3192, 36.9278, 0.01)) {
-      return 5e-5 + Math.random() * 2e-5;
-    }
-    
-    // Residential areas
-    if (this.isNearLocation(lat, lon, -1.2676, 36.8094, 0.02)) { // Westlands
-      return 3e-5 + Math.random() * 2e-5;
-    }
-    
-    // Background/rural areas
-    return 1e-5 + Math.random() * 1e-5; // Low background NO2
-  }
-
-  // Helper function to check proximity to a location
-  isNearLocation(lat, lon, targetLat, targetLon, radius) {
-    const distance = Math.sqrt(
-      Math.pow(lat - targetLat, 2) + Math.pow(lon - targetLon, 2)
-    );
-    return distance <= radius;
-  }
-
-  // Generate mock ground station data
-  generateMockGroundStationData() {
+  // Generate empty ground station data instead of mock data
+  generateEmptyGroundStationData() {
     return {
-      stations_count: 8,
-      stations: [
-        {
-          location: 'Nairobi CBD',
-          coordinates: { latitude: -1.2921, longitude: 36.8219 },
-          measurements: [
-            { parameter: 'PM2.5', value: 45.2, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 78.5, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 32.1, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        },
-        {
-          location: 'Westlands',
-          coordinates: { latitude: -1.2676, longitude: 36.8094 },
-          measurements: [
-            { parameter: 'PM2.5', value: 32.1, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 52.3, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 19.8, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        },
-        {
-          location: 'Embakasi',
-          coordinates: { latitude: -1.3231, longitude: 36.9081 },
-          measurements: [
-            { parameter: 'PM2.5', value: 58.3, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 95.7, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 28.4, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        },
-        {
-          location: 'Industrial Area',
-          coordinates: { latitude: -1.3031, longitude: 36.8592 },
-          measurements: [
-            { parameter: 'PM2.5', value: 67.8, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 112.4, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 45.6, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        },
-        {
-          location: 'Karen',
-          coordinates: { latitude: -1.3194, longitude: 36.7073 },
-          measurements: [
-            { parameter: 'PM2.5', value: 25.3, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 42.1, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 15.2, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        },
-        {
-          location: 'Kileleshwa',
-          coordinates: { latitude: -1.2697, longitude: 36.7736 },
-          measurements: [
-            { parameter: 'PM2.5', value: 32.4, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 54.8, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 21.3, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        },
-        {
-          location: 'Kasarani',
-          coordinates: { latitude: -1.2205, longitude: 36.8968 },
-          measurements: [
-            { parameter: 'PM2.5', value: 41.6, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 68.2, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 24.7, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        },
-        {
-          location: 'Eastlands',
-          coordinates: { latitude: -1.2921, longitude: 36.8917 },
-          measurements: [
-            { parameter: 'PM2.5', value: 52.1, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'PM10', value: 89.3, unit: 'μg/m³', lastUpdated: new Date().toISOString() },
-            { parameter: 'NO2', value: 31.8, unit: 'μg/m³', lastUpdated: new Date().toISOString() }
-          ]
-        }
-      ]
+      stations_count: 0,
+      stations: [],
+      status: 'unavailable',
+      error: 'Ground station data not accessible'
     };
   }
 
-  // Generate mock weather data
-  generateMockWeatherData() {
+  // Generate empty weather data instead of mock data
+  generateEmptyWeatherData() {
     return {
-      temperature: 24 + Math.random() * 8, // 24-32°C
-      humidity: 50 + Math.random() * 30, // 50-80%
-      wind_speed: 2 + Math.random() * 8, // 2-10 m/s
-      pressure: 1010 + Math.random() * 20, // 1010-1030 hPa
-      weather: 'partly cloudy'
+      temperature: null,
+      humidity: null,
+      wind_speed: null,
+      pressure: null,
+      weather: 'unavailable',
+      status: 'unavailable',
+      error: 'Weather data not accessible'
     };
   }
 
@@ -287,7 +162,7 @@ class DirectSatelliteService {
     };
 
     // Identify pollution hotspots from satellite data
-    if (satellite?.measurements) {
+    if (satellite?.measurements && satellite.measurements.length > 0) {
       const hotspots = satellite.measurements
         .filter(m => m.no2_tropospheric > 5e-5 && m.qa_value > 0.6)
         .sort((a, b) => b.no2_tropospheric - a.no2_tropospheric)
@@ -311,7 +186,7 @@ class DirectSatelliteService {
     }
 
     // Calculate air quality summary from ground stations
-    if (ground?.stations) {
+    if (ground?.stations && ground.stations.length > 0) {
       const pm25Values = ground.stations
         .flatMap(s => s.measurements)
         .filter(m => m.parameter === 'PM2.5')
@@ -325,9 +200,9 @@ class DirectSatelliteService {
           min_pm25: Math.min(...pm25Values),
           stations_reporting: pm25Values.length,
           overall_status: this.getAQIStatus(avgPM25),
-          temperature: weather?.temperature || 26,
-          humidity: weather?.humidity || 56,
-          weather_conditions: weather?.weather || 'partly cloudy'
+          temperature: weather?.temperature || null,
+          humidity: weather?.humidity || null,
+          weather_conditions: weather?.weather || 'unavailable'
         };
       }
     }
@@ -404,8 +279,8 @@ class DirectSatelliteService {
     return recommendations;
   }
 
-  // Generate complete mock data when all APIs are unavailable
-  generateMockNairobiData() {
+  // Generate empty Nairobi data instead of mock data
+  generateEmptyNairobiData() {
     const bbox = [36.65, -1.45, 37.00, -1.15];
     
     return {
@@ -413,48 +288,31 @@ class DirectSatelliteService {
       location: 'Nairobi, Kenya',
       bbox,
       sources: {
-        satellite_no2: this.generateSentinel5PMockData(bbox),
-        ground_stations: this.generateMockGroundStationData(),
-        weather: this.generateMockWeatherData()
+        satellite_no2: this.generateEmptySatelliteData(),
+        ground_stations: this.generateEmptyGroundStationData(),
+        weather: this.generateEmptyWeatherData()
       },
       processed_data: {
-        pollution_hotspots: [
-          {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [36.8219, -1.2921] },
-            properties: { no2_concentration: 8.5e-5, severity: 'high', confidence: 0.85, source: 'satellite' }
-          }
-        ],
+        pollution_hotspots: [],
         air_quality_summary: {
-          avg_pm25: 42.3,
-          max_pm25: 67.8,
-          min_pm25: 18.7,
-          stations_reporting: 8,
-          overall_status: 'unhealthy',
-          temperature: 26,
-          humidity: 56,
-          weather_conditions: 'partly cloudy'
+          avg_pm25: null,
+          max_pm25: null,
+          min_pm25: null,
+          stations_reporting: 0,
+          overall_status: 'unknown',
+          temperature: null,
+          humidity: null,
+          weather_conditions: 'unavailable'
         },
-        alerts: [
-          {
-            id: 'alert_demo_001',
-            type: 'air_pollution',
-            severity: 'high',
-            location: [36.8219, -1.2921],
-            message: 'High air pollution detected in Nairobi CBD area.',
-            timestamp: new Date().toISOString()
-          }
-        ],
-        recommendations: [
-          {
-            type: 'traffic_management',
-            title: 'Implement Peak Hour Traffic Restrictions',
-            description: 'Restrict heavy vehicles during 7-9 AM and 5-7 PM in CBD area.',
-            priority: 'high',
-            estimated_impact: '25% reduction in NO2 emissions',
-            timeline: 'Implementation: 1-2 weeks'
-          }
-        ]
+        alerts: [{
+          id: 'system_error_001',
+          type: 'system_error',
+          severity: 'low',
+          location: [36.8219, -1.2921],
+          message: 'Data sources not available - service will be updated with real data integration',
+          timestamp: new Date().toISOString()
+        }],
+        recommendations: []
       }
     };
   }

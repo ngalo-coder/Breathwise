@@ -1,5 +1,5 @@
 import express from 'express';
-import { getHotspots, getMeasurements, getNairobiZones, triggerAnalysis } from '../controllers/air.controller.js';
+import { getHotspots, getMeasurements, getNairobiZones, triggerAdvancedAnalysis } from '../controllers/enhancedAir.controller.js';
 
 const router = express.Router();
 
@@ -13,6 +13,6 @@ router.get('/measurements', getMeasurements);
 router.get('/nairobi-zones', getNairobiZones);
 
 // Trigger hotspot analysis
-router.post('/analyze', triggerAnalysis);
+router.post('/analyze', triggerAdvancedAnalysis);
 
 export default router;

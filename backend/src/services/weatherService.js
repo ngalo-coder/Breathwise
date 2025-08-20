@@ -216,40 +216,20 @@ class WeatherService {
     return 'neutral';
   }
 
-  // Generate mock weather data if API fails
+  // Return empty data instead of mock weather data
   generateMockWeatherData() {
     return {
-      success: true,
-      locations: [
-        {
-          location: 'Nairobi CBD',
-          coordinates: { lat: -1.2921, lon: 36.8219 },
-          temperature: 24 + Math.random() * 6, // 24-30°C
-          humidity: 50 + Math.random() * 30, // 50-80%
-          pressure: 1010 + Math.random() * 15, // 1010-1025 hPa
-          wind_speed: 2 + Math.random() * 6, // 2-8 m/s
-          weather_description: 'partly cloudy',
-          timestamp: new Date().toISOString()
-        },
-        {
-          location: 'Westlands',
-          coordinates: { lat: -1.2676, lon: 36.8094 },
-          temperature: 23 + Math.random() * 5,
-          humidity: 55 + Math.random() * 25,
-          pressure: 1012 + Math.random() * 12,
-          wind_speed: 3 + Math.random() * 5,
-          weather_description: 'clear sky',
-          timestamp: new Date().toISOString()
-        }
-      ],
+      success: false,
+      locations: [],
       summary: {
-        avg_temperature: 26.5,
-        avg_humidity: 62,
-        avg_pressure: 1015,
-        dominant_weather: 'partly cloudy',
-        locations_reporting: 2
+        avg_temperature: null,
+        avg_humidity: null,
+        avg_pressure: null,
+        dominant_weather: 'unavailable',
+        locations_reporting: 0
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      error: 'Weather data not available - service will be updated with real data integration'
     };
   }
 

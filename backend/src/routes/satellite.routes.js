@@ -1,6 +1,6 @@
 // backend/src/routes/satellite.routes.js
 import express from 'express';
-import directSatelliteService from '../services/satelliteDirect.service.js';
+import enhancedSatelliteService from '../services/enhancedSatelliteService.js';
 import { io } from '../app.js';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.get('/nairobi', async (req, res) => {
   try {
     console.log('🛰️ Fetching Nairobi satellite data...');
     
-    const satelliteData = await directSatelliteService.getNairobiAirQuality();
+    const satelliteData = await enhancedSatelliteService.getNairobiComprehensiveData();
     
     // Emit real-time update via WebSocket
     if (io) {
@@ -41,7 +41,7 @@ router.get('/hotspots', async (req, res) => {
   try {
     const { severity = 'moderate' } = req.query;
     
-    const satelliteData = await directSatelliteService.getNairobiAirQuality();
+    const satelliteData = await enhancedSatelliteService.getNairobiComprehensiveData();
     
     // Filter hotspots by severity
     let hotspots = satelliteData.processed_data.pollution_hotspots;
@@ -83,7 +83,7 @@ router.get('/alerts', async (req, res) => {
   try {
     const { severity } = req.query;
     
-    const satelliteData = await directSatelliteService.getNairobiAirQuality();
+    const satelliteData = await enhancedSatelliteService.getNairobiComprehensiveData();
     
     let alerts = satelliteData.processed_data.alerts;
     
@@ -113,7 +113,7 @@ router.get('/alerts', async (req, res) => {
 // Get AI-generated policy recommendations
 router.get('/recommendations', async (req, res) => {
   try {
-    const satelliteData = await directSatelliteService.getNairobiAirQuality();
+    const satelliteData = await enhancedSatelliteService.getNairobiComprehensiveData();
     
     const recommendations = satelliteData.processed_data.recommendations;
 
@@ -144,7 +144,7 @@ router.get('/no2', async (req, res) => {
   try {
     const { format = 'geojson' } = req.query;
     
-    const satelliteData = await directSatelliteService.getNairobiAirQuality();
+    const satelliteData = await enhancedSatelliteService.getNairobiComprehensiveData();
     const no2Data = satelliteData.sources.satellite_no2;
 
     if (!no2Data || !no2Data.measurements) {
@@ -207,7 +207,7 @@ router.get('/no2', async (req, res) => {
 // Get comprehensive air quality summary
 router.get('/summary', async (req, res) => {
   try {
-    const satelliteData = await directSatelliteService.getNairobiAirQuality();
+    const satelliteData = await enhancedSatelliteService.getNairobiComprehensiveData();
     
     const summary = {
       timestamp: satelliteData.timestamp,
@@ -249,10 +249,10 @@ router.post('/refresh', async (req, res) => {
     console.log('🔄 Forcing satellite data refresh...');
     
     // Clear cache to force fresh data fetch
-    directSatelliteService.clearCache();
+    enhancedSatelliteService.clearCache();
     
     // Fetch fresh data
-    const freshData = await directSatelliteService.getNairobiAirQuality();
+    const freshData = await enhancedSatelliteService.getNairobiComprehensiveData();
     
     // Emit real-time update
     if (io) {
@@ -266,7 +266,7 @@ router.post('/refresh', async (req, res) => {
     res.json({
       message: 'Satellite data refreshed successfully',
       timestamp: freshData.timestamp,
-      cache_stats: directSatelliteService.getCacheStats(),
+      cache_stats: enhancedSatelliteService.getCacheStats(),
       hotspots_detected: freshData.processed_data.pollution_hotspots.length,
       alerts_generated: freshData.processed_data.alerts.length
     });
@@ -283,7 +283,7 @@ router.post('/refresh', async (req, res) => {
 // Get cache statistics (for debugging/monitoring)
 router.get('/cache/stats', async (req, res) => {
   try {
-    const stats = directSatelliteService.getCacheStats();
+    const stats = enhancedSatelliteService.getCacheStats();
     
     res.json({
       cache_stats: stats,
@@ -312,12 +312,12 @@ router.get('/health', async (req, res) => {
         data_processing: 'operational'
       },
       last_successful_fetch: null,
-      cache_info: directSatelliteService.getCacheStats()
+      cache_info: enhancedSatelliteService.getCacheStats()
     };
 
     // Try to get cached data to verify system is working
     try {
-      const testData = await directSatelliteService.getNairobiAirQuality();
+      const testData = await enhancedSatelliteService.getNairobiComprehensiveData();
       healthCheck.last_successful_fetch = testData.timestamp;
       healthCheck.data_points = {
         satellite_measurements: testData.sources.satellite_no2?.measurements_count || 0,

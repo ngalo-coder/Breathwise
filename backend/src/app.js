@@ -48,7 +48,6 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://localhost:5173',
       'https://unep-air-quality.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
@@ -177,7 +176,7 @@ app.use('*', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 8000;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 UNEP API Server running on port ${PORT}`);
