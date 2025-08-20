@@ -20,10 +20,20 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 
+// --- CORS ORIGIN SETUP FOR MULTIPLE ENVIRONMENTS ---
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://unep-air-quality.vercel.app',
+  'https://breathwise.vercel.app',
+  'https://unep-air-quality-platform.netlify.app', // Netlify frontend
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -48,16 +58,8 @@ app.use(helmet({
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://unep-air-quality.vercel.app',
-      'https://breathwise.vercel.app',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
-    
+    // Allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -103,7 +105,7 @@ app.get('/health', async (req, res) => {
   try {
     // Test API connectivity
     const cacheStats = directDataService.getCacheStats();
-    
+
     res.json({ 
       status: 'healthy', 
       timestamp: new Date().toISOString(),
@@ -170,14 +172,14 @@ app.post('/api/cache/clear', (req, res) => {
 app.get('/api/test-apis', async (req, res) => {
   try {
     console.log('🧪 Testing API connectivity...');
-    
+
     const testResults = {
       weatherapi: false,
       openaq: false,
       iqair: false,
       waqi: false
     };
-    
+
     // Test WeatherAPI
     if (process.env.WEATHERAPI_KEY) {
       try {
@@ -190,7 +192,7 @@ app.get('/api/test-apis', async (req, res) => {
         console.warn('WeatherAPI test failed:', error.message);
       }
     }
-    
+
     // Test OpenAQ
     try {
       const headers = process.env.OPENAQ_API_KEY ? { 'X-API-Key': process.env.OPENAQ_API_KEY } : {};
@@ -202,7 +204,7 @@ app.get('/api/test-apis', async (req, res) => {
     } catch (error) {
       console.warn('OpenAQ test failed:', error.message);
     }
-    
+
     // Test IQAir
     if (process.env.IQAIR_API_KEY) {
       try {
@@ -215,7 +217,7 @@ app.get('/api/test-apis', async (req, res) => {
         console.warn('IQAir test failed:', error.message);
       }
     }
-    
+
     // Test WAQI
     if (process.env.WAQI_TOKEN) {
       try {
@@ -228,7 +230,7 @@ app.get('/api/test-apis', async (req, res) => {
         console.warn('WAQI test failed:', error.message);
       }
     }
-    
+
     const workingAPIs = Object.values(testResults).filter(Boolean).length;
     const totalConfigured = Object.entries(testResults).filter(([key, _]) => {
       const envVars = {
@@ -239,7 +241,7 @@ app.get('/api/test-apis', async (req, res) => {
       };
       return envVars[key];
     }).length;
-    
+
     res.json({
       success: workingAPIs > 0,
       apis_tested: testResults,
@@ -251,7 +253,7 @@ app.get('/api/test-apis', async (req, res) => {
       recommendations: generateAPIRecommendations(testResults),
       timestamp: new Date().toISOString()
     });
-    
+
   } catch (error) {
     console.error('❌ API test error:', error);
     res.status(500).json({
@@ -380,7 +382,7 @@ app.get('/setup', (req, res) => {
     },
     troubleshooting: {
       'No data returned': 'Check API keys in .env file',
-      'CORS errors': 'Verify FRONTEND_URL in .env',
+      'CORS errors': 'Verify FRONTEND_URL in .env and allowedOrigins in app.js',
       'Timeout errors': 'Check internet connection and API status',
       'AI features not working': 'Verify OPENROUTER_API_KEY configuration'
     },
@@ -396,9 +398,9 @@ app.get('/setup', (req, res) => {
 // Enhanced Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log(`🔌 Client connected: ${socket.id}`);
-  
+
   socket.join('nairobi_dashboard');
-  
+
   socket.emit('connection_status', {
     status: 'connected',
     message: 'Connected to UNEP Air Quality Platform (Simplified Mode)',
@@ -443,7 +445,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', (reason) => {
     console.log(`🔌 Client disconnected: ${socket.id}, reason: ${reason}`);
   });
-  
+
   socket.on('error', (error) => {
     console.error('🔌 Socket error:', error);
   });
@@ -454,10 +456,10 @@ setInterval(async () => {
   try {
     console.log('🔄 Automatic cache refresh...');
     directDataService.clearCache();
-    
+
     // Fetch fresh data
     const freshData = await directDataService.getNairobiData();
-    
+
     // Notify all connected clients
     io.to('nairobi_dashboard').emit('auto_refresh', {
       timestamp: freshData.timestamp,
@@ -465,7 +467,7 @@ setInterval(async () => {
       sources_active: freshData.data_sources.length,
       message: 'Data automatically refreshed'
     });
-    
+
   } catch (error) {
     console.error('❌ Auto refresh error:', error);
   }
@@ -474,7 +476,7 @@ setInterval(async () => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-  
+
   console.error('❌ Application Error:', {
     id: errorId,
     message: err.message,
@@ -516,7 +518,7 @@ app.use('*', (req, res) => {
 // Helper function for API recommendations
 function generateAPIRecommendations(testResults) {
   const recommendations = [];
-  
+
   if (!testResults.weatherapi) {
     recommendations.push({
       priority: 'high',
@@ -524,7 +526,7 @@ function generateAPIRecommendations(testResults) {
       action: 'Get free API key at https://www.weatherapi.com/signup.aspx'
     });
   }
-  
+
   if (!testResults.openaq && !testResults.iqair && !testResults.waqi) {
     recommendations.push({
       priority: 'medium',
@@ -532,7 +534,7 @@ function generateAPIRecommendations(testResults) {
       action: 'Register for OpenAQ (free) or other premium services'
     });
   }
-  
+
   if (Object.values(testResults).every(result => result === false)) {
     recommendations.push({
       priority: 'critical',
@@ -540,7 +542,7 @@ function generateAPIRecommendations(testResults) {
       action: 'Check internet connection and API key configurations'
     });
   }
-  
+
   return recommendations;
 }
 
@@ -562,17 +564,17 @@ server.listen(PORT, '0.0.0.0', () => {
 // Graceful shutdown
 const gracefulShutdown = (signal) => {
   console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
-  
+
   server.close(() => {
     console.log('🛑 HTTP server closed');
-    
+
     io.close(() => {
       console.log('🛑 WebSocket server closed');
       console.log('🛑 Process terminated');
       process.exit(0);
     });
   });
-  
+
   setTimeout(() => {
     console.error('🚨 Forced shutdown after timeout');
     process.exit(1);
