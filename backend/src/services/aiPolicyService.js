@@ -7,9 +7,13 @@ import NodeCache from 'node-cache';
 class AIPolicyService {
   constructor() {
     this.cache = new NodeCache({ stdTTL: 900 }); // 15 minutes cache
-    this.openRouterKey = process.env.OPENROUTER_API_KEY;
     this.openRouterBaseUrl = 'https://openrouter.ai/api/v1';
     this.preferredModel = 'anthropic/claude-3.5-sonnet'; // Best for analysis
+  }
+  
+  // Getter for OpenRouter API key to ensure it's loaded when needed
+  get openRouterKey() {
+    return process.env.OPENROUTER_API_KEY;
   }
 
   // Update the API key (useful for test environments)
@@ -177,7 +181,9 @@ class AIPolicyService {
 
   // 🔧 Core AI interaction method
   async callOpenRouter(prompt, options = {}) {
-    if (!this.openRouterKey) {
+    const apiKey = this.openRouterKey;
+    if (!apiKey) {
+      console.error('OpenRouter API key not found in environment variables');
       throw new Error('OpenRouter API key not configured');
     }
 
@@ -202,7 +208,7 @@ class AIPolicyService {
 
     const response = await axios.post(`${this.openRouterBaseUrl}/chat/completions`, payload, {
       headers: {
-        'Authorization': `Bearer ${this.openRouterKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': process.env.FRONTEND_URL || 'http://localhost:3000',
         'X-Title': 'UNEP Air Quality Platform'
