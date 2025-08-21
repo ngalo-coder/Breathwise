@@ -6,7 +6,6 @@ import MapView from './components/Map/MapView';
 import Analytics from './components/Analytics/Analytics';
 import Alerts from './components/Alerts/Alerts';
 import Policy from './components/Policy/Policy';
-import Settings from './components/Settings/Settings';
 import { SocketProvider } from './context/SocketContext';
 import { DataProvider } from './context/DataContext';
 import './App.css';
@@ -24,7 +23,6 @@ function App() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/alerts" element={<Alerts />} />
               <Route path="/policy" element={<Policy />} />
-              <Route path="/settings" element={<Settings />} />
             </Routes>
           </Router>
           <Toaster 
