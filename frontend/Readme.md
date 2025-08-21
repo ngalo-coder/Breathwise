@@ -22,7 +22,8 @@ npm install
 2. **Environment variables**
 Create `.env` file:
 ```env
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:8000
+VITE_WS_URL=http://localhost:8000
 VITE_AUTH0_DOMAIN=your-auth0-domain
 VITE_AUTH0_CLIENT_ID=your-client-id
 VITE_ARCGIS_API_KEY=your-arcgis-key

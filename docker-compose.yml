@@ -29,7 +29,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "3001:3001"
+      - "8000:8000"
     environment:
       NODE_ENV: development
       DB_HOST: postgres
@@ -51,7 +51,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      VITE_API_URL: http://localhost:3001
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_URL: http://localhost:8000
     depends_on:
       - backend
     volumes:
