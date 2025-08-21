@@ -24,9 +24,10 @@ const server = createServer(app);
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:5173', // <-- Add this line
   'https://unep-air-quality.vercel.app',
   'https://breathwise.vercel.app',
-  'https://unep-air-quality-platform.netlify.app', // Netlify frontend
+  'https://unep-air-quality-platform.netlify.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 

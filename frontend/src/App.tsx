@@ -8,7 +8,7 @@ import Alerts from './components/Alerts/Alerts';
 import Policy from './components/Policy/Policy';
 import { SocketProvider } from './context/SocketContext';
 import { DataProvider } from './context/DataContext';
-import './App.css';
+// import './App.css';
 
 function App() {
   return (

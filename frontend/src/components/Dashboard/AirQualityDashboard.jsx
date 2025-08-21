@@ -31,8 +31,8 @@ import {
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useSocket } from '../../context/SocketContext';
-import MapView from './MapView';
-import AnalyticsView from './AnalyticsView';
+import MapView from '../Map/MapView';
+import AnalyticsView from '../Analytics/Analytics';
 
 const AirQualityDashboard = () => {
   // State management
