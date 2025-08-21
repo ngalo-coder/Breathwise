@@ -31,7 +31,7 @@ export const SocketProvider = ({ children }) => {
   }, []);
 
   const initializeSocket = () => {
-    const serverUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:8000';
+    const serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:8001';
     
     const newSocket = io(serverUrl, {
       transports: ['websocket', 'polling'],
