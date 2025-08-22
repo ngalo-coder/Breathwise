@@ -1,82 +1,60 @@
-/**
- * @swagger
- * tags:
- *   name: Air Quality
- *   description: Air quality data endpoints
- */
 import express from 'express';
+import { param } from 'express-validator';
 import {
-  getHotspots,
+  getCityData,
   getMeasurements,
+  getHotspots,
+  getAlerts,
+  getDashboard,
+  refreshData,
+  getLocationData,
   getNairobiZones,
   triggerAnalysis
 } from '../controllers/air.controller.js';
 
-/**
- * @swagger
- * /hotspots:
- *   get:
- *     summary: Get pollution hotspots
- *     tags: [Air Quality]
- *     responses:
- *       200:
- *         description: Hotspots data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- */
 const router = express.Router();
 
-// Air quality data routes
-router.get('/hotspots', getHotspots);           // Get pollution hotspots
+// Input validation
+const validateCity = [
+  param('city')
+    .isAlpha('en-US', { ignore: ' -' })
+    .withMessage('City name can only contain letters, spaces, and hyphens')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('City name must be between 2-50 characters')
+];
 
-/**
- * @swagger
- * /measurements:
- *   get:
- *     summary: Get air quality measurements
- *     tags: [Air Quality]
- *     responses:
- *       200:
- *         description: Measurements data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- */
-router.get('/measurements', getMeasurements);   // Get air quality measurements
+// --- Core Air Quality Data Routes ---
 
-/**
- * @swagger
- * /nairobi-zones:
- *   get:
- *     summary: Get Nairobi monitoring zones
- *     tags: [Air Quality]
- *     responses:
- *       200:
- *         description: Nairobi zones data
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- */
-router.get('/nairobi-zones', getNairobiZones);  // Get Nairobi monitoring zones
+// Get comprehensive data for a specific city
+router.get('/:city', validateCity, getCityData);
 
-/**
- * @swagger
- * /analyze:
- *   post:
- *     summary: Trigger hotspot analysis
- *     tags: [Air Quality]
- *     responses:
- *       200:
- *         description: Analysis initiated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- */
-router.post('/analyze', triggerAnalysis);       // Trigger hotspot analysis
+// Get air quality measurements (supports geojson)
+router.get('/measurements', getMeasurements);
+
+// Get pollution hotspots
+router.get('/hotspots', getHotspots);
+
+// Get active alerts
+router.get('/alerts', getAlerts);
+
+// --- Dashboard and Utility Routes ---
+
+// Get data formatted for a dashboard view
+router.get('/dashboard', getDashboard);
+
+// Trigger a manual data refresh for the default city
+router.post('/refresh', refreshData);
+
+// Get data for a specific lat/lon coordinate
+router.get('/geo/location', getLocationData);
+
+
+// --- Specialized and Analysis Routes ---
+
+// Get monitoring zones for Nairobi
+router.get('/nairobi-zones', getNairobiZones);
+
+// Trigger a hotspot analysis
+router.post('/analyze', triggerAnalysis);
 
 export default router;
