@@ -9,9 +9,9 @@
     "dev": "nodemon src/app.js",
     "dev:debug": "cross-env PORT=8000 DEBUG=* nodemon src/app.js",
     "build": "echo 'No build step required for Node.js'",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "health": "curl http://localhost:${PORT:-8000}/health || echo 'Health check failed'",
@@ -87,6 +87,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "transform": {},
     "collectCoverage": true,
     "coverageDirectory": "coverage",
     "coveragePathIgnorePatterns": [
