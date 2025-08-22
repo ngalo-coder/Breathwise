@@ -1,79 +1,95 @@
+import express from 'express';
+import {
+  getAIAnalysis,
+  getSmartHotspots
+} from '../controllers/ai.controller.js';
+import rateLimit from 'express-rate-limit';
+
+const router = express.Router();
+
 /**
  * @swagger
  * tags:
  *   name: AI Analysis
- *   description: AI-powered analysis endpoints
+ *   description: AI-powered analysis and smart data endpoints. These endpoints are computationally intensive and have stricter rate limits.
  */
-import express from 'express';
-import {
-  getAIAnalysis,
-  getSmartHotspots  
-} from '../controllers/ai.controller.js';
 
-import rateLimit from 'express-rate-limit';
-
-// Rate limiting for AI endpoints (more expensive operations)
+// Rate limiting for AI endpoints
 const aiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 requests per windowMs
+  max: 10,
   message: {
     error: 'Too many AI requests',
     message: 'Please try again after 15 minutes'
   }
 });
 
-const router = express.Router();
-
 /**
  * @swagger
- * /{city}/analysis:
+ * /api/ai/{city}/analysis:
  *   get:
- *     summary: Get AI analysis for a city
+ *     summary: Get AI-powered analysis for a city
  *     tags: [AI Analysis]
+ *     description: Generates a comprehensive AI analysis for the specified city, including risk assessment, key findings, trend analysis, and health impact predictions.
  *     parameters:
  *       - in: path
  *         name: city
  *         required: true
  *         schema:
  *           type: string
- *         description: City name
+ *           default: Nairobi
+ *         description: The name of the city.
+ *       - in: query
+ *         name: analysis_depth
+ *         schema:
+ *           type: string
+ *           enum: [standard, comprehensive]
+ *           default: standard
+ *         description: The depth of the AI analysis.
  *     responses:
  *       200:
- *         description: AI analysis data
+ *         description: A JSON object containing the AI analysis.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/AIAnalysis'
+ *       500:
+ *         description: Error generating AI analysis.
  */
 router.get('/:city/analysis', aiLimiter, getAIAnalysis);
 
 /**
  * @swagger
- * /{city}/smart-hotspots:
+ * /api/ai/{city}/smart-hotspots:
  *   get:
- *     summary: Get smart hotspots for a city
+ *     summary: Get AI-detected smart hotspots for a city
  *     tags: [AI Analysis]
+ *     description: Identifies and returns smart pollution hotspots for a city using AI clustering algorithms. Provides richer data than standard hotspots, including confidence scores and source attribution.
  *     parameters:
  *       - in: path
  *         name: city
  *         required: true
  *         schema:
  *           type: string
- *         description: City name
+ *           default: Nairobi
+ *         description: The name of the city.
+ *       - in: query
+ *         name: algorithm
+ *         schema:
+ *           type: string
+ *           enum: [dbscan, kmeans]
+ *           default: dbscan
+ *         description: The clustering algorithm to use for hotspot detection.
  *     responses:
  *       200:
- *         description: Smart hotspots data
+ *         description: A GeoJSON FeatureCollection of smart hotspots.
  *         content:
  *           application/json:
  *             schema:
- *               type: object
+ *               $ref: '#/components/schemas/SmartHotspots'
+ *       500:
+ *         description: Error detecting smart hotspots.
  */
 router.get('/:city/smart-hotspots', aiLimiter, getSmartHotspots);
-
-// Other routes with Swagger annotations...
-
-// router.get('/:city/early-warnings', aiLimiter, getEarlyWarnings);
-// router.get('/:city/policy-analysis', aiLimiter, getPolicyAnalysis);
-// router.get('/:city/recommendations', aiLimiter, getRecommendations);
 
 export default router;
