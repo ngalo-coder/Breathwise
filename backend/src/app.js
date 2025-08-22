@@ -35,6 +35,7 @@ const allowedOrigins = [
   'https://unep-air-quality.vercel.app',
   'https://breathwise.vercel.app',
   'https://unep-air-quality-platform.netlify.app',
+  'https://unep-air-backend.onrender.com',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 

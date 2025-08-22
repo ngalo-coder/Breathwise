@@ -18,6 +18,10 @@ const options = {
         url: 'http://localhost:8000',
         description: 'Development server',
       },
+      {
+        url: 'https://unep-air-backend.onrender.com',
+        description: 'Production server',
+      },
     ],
     components: {
       schemas: {
