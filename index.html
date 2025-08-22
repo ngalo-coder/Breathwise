@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirWise | Real-time Air Quality Monitoring</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c7be5;
+            --secondary: #6e84a3;
+            --success: #00d97e;
+            --warning: #f6c343;
+            --danger: #e63757;
+            --info: #39afd1;
+            --dark: #12263f;
+            --light: #f9fbfd;
+            --background: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-primary: #12263f;
+            --text-secondary: #6e84a3;
+            --border: #e3ebf6;
+        }
+
+        .dark-mode {
+            --background: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--card-bg);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 1rem;
+            position: fixed;
+            width: 240px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            color: var(--primary);
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(44, 123, 229, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            margin-right: 0.75rem;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            grid-column: 2;
+            padding: 1.5rem;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            width: 240px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle, .notification-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover, .notification-btn:hover {
+            background: rgba(44, 123, 229, 0.1);
+            color: var(--primary);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .card-actions {
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            grid-column: span 3;
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .bg-primary-light {
+            background: rgba(44, 123, 229, 0.1);
+            color: var(--primary);
+        }
+
+        .bg-success-light {
+            background: rgba(0, 217, 126, 0.1);
+            color: var(--success);
+        }
+
+        .bg-warning-light {
+            background: rgba(246, 195, 67, 0.1);
+            color: var(--warning);
+        }
+
+        .bg-danger-light {
+            background: rgba(230, 55, 87, 0.1);
+            color: var(--danger);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Map Card */
+        .map-card {
+            grid-column: span 8;
+            height: 500px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 0.75rem;
+        }
+
+        /* Side Cards */
+        .side-card {
+            grid-column: span 4;
+        }
+
+        /* Alert List */
+        .alert-item {
+            display: flex;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .alert-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Charts */
+        .chart-card {
+            grid-column: span 6;
+            height: 300px;
+        }
+
+        .chart-container {
+            height: 250px;
+            width: 100%;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .stat-card {
+                grid-column: span 6;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                grid-column: 1;
+            }
+            
+            .map-card {
+                grid-column: 1 / -1;
+            }
+            
+            .side-card {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stat-card {
+                grid-column: span 12;
+            }
+            
+            .chart-card {
+                grid-column: span 12;
+            }
+            
+            .search-input {
+                width: 180px;
+            }
+        }
+
+        /* Map legend */
+        .map-legend {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+
+        /* Loading animation */
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(44, 123, 229, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            margin-right: 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+        }
+
+        /* Notification panel */
+        .notification-panel {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            width: 320px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+        }
+
+        .notification-panel.show {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-title {
+            font-weight: 600;
+        }
+
+        .notification-content {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* AI Analysis Section */
+        .ai-analysis {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(44, 123, 229, 0.1) 0%, rgba(57, 175, 209, 0.1) 100%);
+            border-radius: 0.5rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .ai-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .ai-title i {
+            margin-right: 0.5rem;
+            color: var(--primary);
+        }
+
+        .ai-content {
+            font-size: 0.875rem;
+        }
+
+        /* Policy Recommendations */
+        .policy-card {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .policy-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .policy-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .policy-meta {
+            display: flex;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .policy-meta span {
+            margin-right: 1rem;
+        }
+
+        /* Risk indicators */
+        .risk-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .risk-low {
+            background: rgba(0, 217, 126, 0.1);
+            color: var(--success);
+        }
+
+        .risk-medium {
+            background: rgba(246, 195, 67, 0.1);
+            color: var(--warning);
+        }
+
+        .risk-high {
+            background: rgba(230, 55, 87, 0.1);
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-wind"></i></div>
+                <div class="logo-text">AirWise</div>
+            </div>
+            
+            <div class="nav-item active">
+                <div class="nav-icon"><i class="fas fa-chart-line"></i></div>
+                <div>Dashboard</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-map-marked-alt"></i></div>
+                <div>Map View</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-robot"></i></div>
+                <div>AI Analysis</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-file-alt"></i></div>
+                <div>Policy Tools</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-satellite"></i></div>
+                <div>Satellite Data</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-cog"></i></div>
+                <div>Settings</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div style="display: flex; align-items: center;">
+                    <div class="mobile-menu-btn"><i class="fas fa-bars"></i></div>
+                    <h1 class="page-title">Air Quality Dashboard</h1>
+                </div>
+                <div class="header-actions">
+                    <div class="search-bar">
+                        <div class="search-icon"><i class="fas fa-search"></i></div>
+                        <input type="text" class="search-input" placeholder="Search location...">
+                    </div>
+                    <div class="theme-toggle"><i class="fas fa-moon"></i></div>
+                    <div class="notification-btn"><i class="fas fa-bell"></i></div>
+                </div>
+            </div>
+
+            <!-- Notification Panel -->
+            <div class="notification-panel">
+                <div class="notification-header">
+                    <div class="notification-title">Notifications</div>
+                    <div class="card-actions"><i class="fas fa-times"></i></div>
+                </div>
+                <div class="notification-content">
+                    <div class="alert-item">
+                        <div class="alert-icon bg-danger-light"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="alert-content">
+                            <div class="alert-title">High Pollution Alert</div>
+                            <div class="alert-desc">PM2.5 levels exceeding 150μg/m³ detected in Industrial Area</div>
+                            <div class="alert-time">2 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon bg-warning-light"><i class="fas fa-temperature-high"></i></div>
+                        <div class="alert-content">
+                            <div class="alert-title">Temperature Inversion</div>
+                            <div class="alert-desc">Temperature inversion detected, may trap pollutants</div>
+                            <div class="alert-time">5 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon bg-success-light"><i class="fas fa-check-circle"></i></div>
+                        <div class="alert-content">
+                            <div class="alert-title">Data Update Complete</div>
+                            <div class="alert-desc">Latest satellite data has been processed</div>
+                            <div class="alert-time">Yesterday</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Stat Cards -->
+                <div class="card stat-card">
+                    <div class="stat-icon bg-primary-light"><i class="fas fa-smog"></i></div>
+                    <div>
+                        <div class="stat-value" id="pm25-value">--</div>
+                        <div class="stat-label">PM2.5 (μg/m³)</div>
+                    </div>
+                </div>
+                
+                <div class="card stat-card">
+                    <div class="stat-icon bg-warning-light"><i class="fas fa-wind"></i></div>
+                    <div>
+                        <div class="stat-value" id="pm10-value">--</div>
+                        <div class="stat-label">PM10 (μg/m³)</div>
+                    </div>
+                </div>
+                
+                <div class="card stat-card">
+                    <div class="stat-icon bg-success-light"><i class="fas fa-temperature-high"></i></div>
+                    <div>
+                        <div class="stat-value" id="temperature-value">--</div>
+                        <div class="stat-label">Temperature</div>
+                    </div>
+                </div>
+                
+                <div class="card stat-card">
+                    <div class="stat-icon bg-danger-light"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="stat-value" id="aqi-value">--</div>
+                        <div class="stat-label">Air Quality Index</div>
+                    </div>
+                </div>
+
+                <!-- Map Card -->
+                <div class="card map-card">
+                    <div class="card-header">
+                        <div class="card-title">Pollution Map</div>
+                        <div class="card-actions"><i class="fas fa-ellipsis-h"></i></div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+
+                <!-- Alerts Card -->
+                <div class="card side-card">
+                    <div class="card-header">
+                        <div class="card-title">Active Alerts</div>
+                        <div class="card-actions"><i class="fas fa-ellipsis-h"></i></div>
+                    </div>
+                    <div id="alerts-container">
+                        <div class="alert-item">
+                            <div class="alert-icon bg-danger-light"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="alert-content">
+                                <div class="alert-title">High Pollution Alert</div>
+                                <div class="alert-desc">PM2.5 levels exceeding 150μg/m³ detected in Industrial Area</div>
+                                <div class="alert-time">2 hours ago</div>
+                            </div>
+                        </div>
+                        <div class="alert-item">
+                            <div class="alert-icon bg-warning-light"><i class="fas fa-temperature-high"></i></div>
+                            <div class="alert-content">
+                                <div class="alert-title">Temperature Inversion</div>
+                                <div class="alert-desc">Temperature inversion detected, may trap pollutants</div>
+                                <div class="alert-time">5 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Card -->
+                <div class="card side-card">
+                    <div class="card-header">
+                        <div class="card-title">AI Analysis</div>
+                        <div class="card-actions"><i class="fas fa-ellipsis-h"></i></div>
+                    </div>
+                    <div class="ai-analysis">
+                        <div class="ai-title"><i class="fas fa-robot"></i> Current Risk Assessment</div>
+                        <div class="ai-content">
+                            <p>Air quality is moderate with some elevated PM2.5 levels in industrial areas. Health risks are low for the general population but moderate for sensitive groups.</p>
+                            <p>Trend: <span class="risk-medium">Stable</span></p>
+                            <p>Confidence: <span class="risk-low">87%</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Policy Recommendations -->
+                <div class="card side-card">
+                    <div class="card-header">
+                        <div class="card-title">Policy Recommendations</div>
+                        <div class="card-actions"><i class="fas fa-ellipsis-h"></i></div>
+                    </div>
+                    <div class="policy-card">
+                        <div class="policy-title">Industrial Emission Controls</div>
+                        <div class="policy-desc">Implement stricter emission standards for industrial zones to reduce PM2.5 and SO2 levels.</div>
+                        <div class="policy-meta">
+                            <span class="risk-high">High Priority</span>
+                            <span><i class="far fa-clock"></i> 3-6 months</span>
+                        </div>
+                    </div>
+                    <div class="policy-card">
+                        <div class="policy-title">Green Space Expansion</div>
+                        <div class="policy-desc">Increase urban green spaces to improve air quality through natural filtration.</div>
+                        <div class="policy-meta">
+                            <span class="risk-medium">Medium Priority</span>
+                            <span><i class="far fa-clock"></i> 1-2 years</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title">Pollution Levels</div>
+                        <div class="card-actions"><i class="fas fa-ellipsis-h"></i></div>
+                    </div>
+                    <div class="chart-container" id="pollution-chart"></div>
+                </div>
+
+                <div class="card chart-card">
+                    <div class="card-header">
+                        <div class="card-title">Health Recommendations</div>
+                        <div class="card-actions"><i class="fas fa-ellipsis-h"></i></div>
+                    </div>
+                    <div class="chart-container" id="health-chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'https://unep-air-backend.onrender.com/api';
+        
+        // DOM Elements
+        const themeToggle = document.querySelector('.theme-toggle');
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const sidebar = document.querySelector('.sidebar');
+        const notificationBtn = document.querySelector('.notification-btn');
+        const notificationPanel = document.querySelector('.notification-panel');
+        const closeNotification = document.querySelector('.notification-header .fa-times');
+        
+        // Theme Toggle
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            themeToggle.innerHTML = document.body.classList.contains('dark-mode') ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        });
+        
+        // Mobile Menu Toggle
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+        
+        // Notification Toggle
+        notificationBtn.addEventListener('click', () => {
+            notificationPanel.classList.toggle('show');
+        });
+        
+        closeNotification.addEventListener('click', () => {
+            notificationPanel.classList.remove('show');
+        });
+        
+        // Close notification panel when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!notificationBtn.contains(e.target) && !notificationPanel.contains(e.target)) {
+                notificationPanel.classList.remove('show');
+            }
+        });
+        
+        // Initialize Map
+        const map = L.map('map').setView([-1.286389, 36.817223], 10); // Nairobi coordinates
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Add map legend
+        const legend = L.control({ position: 'bottomright' });
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'map-legend');
+            div.innerHTML = `
+                <div class="legend-title">Pollution Level</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #00E396"></div>
+                    <span>Good (0-12 μg/m³)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #F6C343"></div>
+                    <span>Moderate (12-35 μg/m³)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF4560"></div>
+                    <span>Unhealthy (35+ μg/m³)</span>
+                </div>
+            `;
+            return div;
+        };
+        legend.addTo(map);
+        
+        // Initialize Charts
+        const pollutionChartOptions = {
+            chart: {
+                type: 'line',
+                height: '100%',
+                fontFamily: 'Inter, sans-serif',
+                toolbar: {
+                    show: false
+                }
+            },
+            series: [{
+                name: 'PM2.5',
+                data: []
+            }, {
+                name: 'PM10',
+                data: []
+            }],
+            xaxis: {
+                categories: []
+            },
+            colors: ['#2c7be5', '#e63757'],
+            stroke: {
+                width: 3,
+                curve: 'smooth'
+            },
+            markers: {
+                size: 4
+            }
+        };
+        
+        const pollutionChart = new ApexCharts(document.querySelector('#pollution-chart'), pollutionChartOptions);
+        pollutionChart.render();
+        
+        const healthChartOptions = {
+            chart: {
+                type: 'radar',
+                height: '100%',
+                fontFamily: 'Inter, sans-serif',
+                toolbar: {
+                    show: false
+                }
+            },
+            series: [{
+                name: 'Health Risk',
+                data: [80, 50, 30, 60, 40, 70]
+            }],
+            labels: ['Respiratory', 'Cardiac', 'Children', 'Elderly', 'Allergies', 'General Population'],
+            colors: ['#2c7be5'],
+            fill: {
+                opacity: 0.2
+            },
+            stroke: {
+                width: 2
+            },
+            markers: {
+                size: 4
+            },
+            yaxis: {
+                tickAmount: 4,
+                labels: {
+                    formatter: function(val) {
+                        return val + '%';
+                    }
+                }
+            }
+        };
+        
+        const healthChart = new ApexCharts(document.querySelector('#health-chart'), healthChartOptions);
+        healthChart.render();
+        
+        // Fetch data from API
+        async function fetchDashboardData() {
+            try {
+                // Show loading states
+                document.getElementById('pm25-value').innerHTML = '<span class="loader"></span>';
+                document.getElementById('pm10-value').innerHTML = '<span class="loader"></span>';
+                document.getElementById('temperature-value').innerHTML = '<span class="loader"></span>';
+                document.getElementById('aqi-value').innerHTML = '<span class="loader"></span>';
+                
+                const response = await fetch(`${API_BASE_URL}/air/dashboard?location=Nairobi`);
+                const data = await response.json();
+                
+                // Update stats
+                document.getElementById('pm25-value').textContent = data.air_quality?.pm25 || '24';
+                document.getElementById('pm10-value').textContent = data.air_quality?.pm10 || '42';
+                document.getElementById('temperature-value').textContent = data.weather?.temperature ? `${data.weather.temperature}°C` : '22°C';
+                document.getElementById('aqi-value').textContent = data.overview?.aqi || 'Moderate';
+                
+                // Update charts with mock data (replace with actual data from API when available)
+                pollutionChart.updateSeries([{
+                    name: 'PM2.5',
+                    data: [12, 15, 18, 25, 32, 28, 22, 19, 16, 14, 12, 15]
+                }, {
+                    name: 'PM10',
+                    data: [24, 28, 32, 40, 48, 42, 35, 30, 26, 24, 25, 28]
+                }]);
+                
+                pollutionChart.updateOptions({
+                    xaxis: {
+                        categories: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                
+                // Set fallback values in case of error
+                document.getElementById('pm25-value').textContent = '24';
+                document.getElementById('pm10-value').textContent = '42';
+                document.getElementById('temperature-value').textContent = '22°C';
+                document.getElementById('aqi-value').textContent = 'Moderate';
+            }
+        }
+        
+        // Fetch measurement data and add to map
+        async function fetchMeasurementData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/air/measurements?hours=24`);
+                const data = await response.json();
+                
+                // Add markers to map (using mock data for demonstration)
+                const mockMeasurements = [
+                    { lat: -1.286389, lng: 36.817223, pm25: 24, pm10: 42, name: "Nairobi Central" },
+                    { lat: -1.304, lng: 36.812, pm25: 32, pm10: 55, name: "Industrial Area" },
+                    { lat: -1.268, lng: 36.792, pm25: 18, pm10: 32, name: "Westlands" },
+                    { lat: -1.322, lng: 36.834, pm25: 42, pm10: 68, name: "Embakasi" },
+                    { lat: -1.275, lng: 36.846, pm25: 15, pm10: 28, name: "Karen" }
+                ];
+                
+                mockMeasurements.forEach(measurement => {
+                    const color = getColorForAQI(measurement.pm25);
+                    
+                    const marker = L.circleMarker([measurement.lat, measurement.lng], {
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.7,
+                        radius: 10
+                    }).addTo(map);
+                    
+                    marker.bindPopup(`
+                        <div style="font-weight: 600; margin-bottom: 8px;">${measurement.name}</div>
+                        <div>PM2.5: ${measurement.pm25} μg/m³</div>
+                        <div>PM10: ${measurement.pm10} μg/m³</div>
+                    `);
+                });
+                
+            } catch (error) {
+                console.error('Error fetching measurement data:', error);
+            }
+        }
+        
+        function getColorForAQI(pm25) {
+            if (pm25 <= 12) return '#00E396'; // Good
+            if (pm25 <= 35) return '#F6C343'; // Moderate
+            return '#FF4560'; // Unhealthy
+        }
+        
+        // Initialize WebSocket connection for real-time updates
+        function initWebSocket() {
+            // For demonstration, we'll simulate WebSocket connection
+            // In a real implementation, you would connect to your WebSocket endpoint
+            console.log('Simulating WebSocket connection');
+            
+            // Simulate receiving real-time updates
+            setInterval(() => {
+                const event = {
+                    event: 'realtimeUpdate',
+                    data: {
+                        air_quality: {
+                            pm25: Math.floor(Math.random() * 10) + 20,
+                            pm10: Math.floor(Math.random() * 15) + 35
+                        }
+                    }
+                };
+                
+                updateRealTimeData(event.data);
+            }, 10000);
+        }
+        
+        function updateRealTimeData(data) {
+            // Update the UI with real-time data
+            if (data.air_quality) {
+                document.getElementById('pm25-value').textContent = data.air_quality.pm25;
+                document.getElementById('pm10-value').textContent = data.air_quality.pm10;
+            }
+        }
+        
+        function showCriticalAlert(alertData) {
+            // Create and show alert notification
+            const alertContainer = document.getElementById('alerts-container');
+            const alertElement = document.createElement('div');
+            alertElement.className = 'alert-item';
+            alertElement.innerHTML = `
+                <div class="alert-icon bg-danger-light"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="alert-content">
+                    <div class="alert-title">${alertData.severity} Alert</div>
+                    <div class="alert-desc">${alertData.message}</div>
+                    <div class="alert-time">Just now</div>
+                </div>
+            `;
+            
+            alertContainer.prepend(alertElement);
+            
+            // Show browser notification if permitted
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Air Quality Alert', {
+                    body: alertData.message
+                });
+            }
+        }
+        
+        // Request notification permission
+        if ('Notification' in window) {
+            Notification.requestPermission();
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchDashboardData();
+            fetchMeasurementData();
+            initWebSocket();
+            
+            // Simulate receiving a critical alert after 5 seconds
+            setTimeout(() => {
+                showCriticalAlert({
+                    severity: 'High Pollution',
+                    message: 'PM2.5 levels reaching unhealthy levels in Central District'
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

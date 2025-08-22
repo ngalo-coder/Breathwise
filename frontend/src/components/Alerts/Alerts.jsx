@@ -22,7 +22,7 @@ import { useSocket } from '../../context/SocketContext';
 import toast from 'react-hot-toast';
 
 const Alerts = () => {
-  const { alerts, refreshSpecificData, loading } = useData();
+  const { alerts, refreshSpecificData, loading, error } = useData();
   const { isConnected } = useSocket();
   const [filteredAlerts, setFilteredAlerts] = useState([]);
   const [filters, setFilters] = useState({
@@ -308,7 +308,7 @@ const Alerts = () => {
 
         {/* Filters and Search */}
         <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
               <select
@@ -398,9 +398,36 @@ const Alerts = () => {
           </div>
         </div>
 
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start">
+              <AlertTriangle className="w-5 h-5 text-red-500 mr-3 mt-0.5" />
+              <div>
+                <h3 className="text-red-800 font-medium">Error loading alerts</h3>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+                <button
+                  onClick={() => refreshSpecificData('alerts')}
+                  className="mt-2 text-red-700 text-sm underline hover:text-red-800"
+                >
+                  Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 mb-6 flex justify-center items-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mr-3"></div>
+            <p className="text-gray-600">Loading alerts...</p>
+          </div>
+        )}
+
         {/* Alerts List */}
         <div className="space-y-4">
-          {filteredAlerts.length === 0 ? (
+          {!loading && filteredAlerts.length === 0 ? (
             <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200 text-center">
               <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No alerts found</h3>

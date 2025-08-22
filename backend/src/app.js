@@ -13,6 +13,10 @@ import rateLimit from 'express-rate-limit';
 // Import simplified routes
 import simpleRoutes from './routes/simple.routes.js';
 import directDataService from './services/directDataService.js';
+// Using CommonJS require for swaggerSpec
+// Using ES module import syntax consistently
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
 
 // Load environment variables
 dotenv.config();
@@ -101,8 +105,12 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
+// Swagger documentation route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
+
 // Enhanced health check
 app.get('/health', async (req, res) => {
+   
   try {
     // Test API connectivity
     const cacheStats = directDataService.getCacheStats();

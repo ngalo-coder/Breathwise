@@ -1,4 +1,6 @@
 
+// websocket/realtime.js
+// This module handles real-time updates for air quality data using WebSockets
 const WebSocket = require('ws');
 const { getLatestZoneData, getPolicyAlerts } = require('../services/dataService');
 

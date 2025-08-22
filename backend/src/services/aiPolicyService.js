@@ -243,7 +243,7 @@ Response format: Always structure responses as valid JSON with clear categories 
   }
 
   // 🏗️ Context preparation methods
-  prepareAnalysisContext(satelliteData, weatherData) {
+  prepareAnalysisContext(satelliteData, weatherData, trafficData) {
     return {
       air_quality: {
         hotspots_detected: satelliteData.processed_data?.pollution_hotspots?.length || 0,
@@ -260,6 +260,10 @@ Response format: Always structure responses as valid JSON with clear categories 
         timestamp: new Date().toISOString(),
         season: this.getCurrentSeason(),
         time_of_day: this.getTimeOfDay()
+      },
+      traffic: {
+        congestion_level: trafficData?.congestion_level || 'unknown',
+        major_incidents: trafficData?.major_incidents || []
       }
     };
   }
@@ -295,35 +299,36 @@ Response format: Always structure responses as valid JSON with clear categories 
 
   // 📊 Prompt building methods
   buildAnalysisPrompt(context, depth) {
-    return `Analyze the following air quality data for Nairobi, Kenya and provide ${depth} assessment:
-
-Context Data:
-${JSON.stringify(context, null, 2)}
-
-Please provide analysis in this JSON format:
-{
-  "assessment": "overall air quality assessment",
-  "riskLevel": "low|medium|high|critical",
-  "confidence": 0.0-1.0,
-  "keyFindings": ["finding1", "finding2", "finding3"],
-  "trends": {
-    "direction": "improving|stable|worsening",
-    "confidence": 0.0-1.0,
-    "timeframe": "short_term|medium_term|long_term"
-  },
-  "predictions": {
-    "short_term": "6-hour forecast",
-    "daily": "24-hour outlook", 
-    "weekly": "7-day trend prediction",
-    "seasonal": "seasonal outlook"
-  },
-  "healthRisks": {
-    "immediate": ["risk1", "risk2"],
-    "vulnerable": ["children", "elderly", "respiratory_patients"],
-    "precautions": ["action1", "action2"],
-    "hospitalAlert": true|false
-  }
-}`;
+    return `Analyze the following air quality data for Nairobi, Kenya and provide a ${depth} assessment with specific, actionable insights:
+    
+    Context Data:
+    ${JSON.stringify(context, null, 2)}
+    
+    Please provide analysis in this JSON format with detailed explanations:
+    {
+      "assessment": "overall air quality assessment with specific details",
+      "riskLevel": "low|medium|high|critical",
+      "confidence": 0.0-1.0,
+      "keyFindings": ["specific finding 1 with explanation", "specific finding 2 with explanation"],
+      "trends": {
+        "direction": "improving|stable|worsening",
+        "confidence": 0.0-1.0,
+        "timeframe": "short_term|medium_term|long_term",
+        "explanation": "brief explanation of trend"
+      },
+      "predictions": {
+        "short_term": "6-hour forecast with expected changes",
+        "daily": "24-hour outlook with expected changes",
+        "weekly": "7-day trend prediction with expected changes",
+        "seasonal": "seasonal outlook with expected impacts"
+      },
+      "healthRisks": {
+        "immediate": ["specific health risk 1", "specific health risk 2"],
+        "vulnerable": ["children", "elderly", "respiratory patients"],
+        "precautions": ["specific action 1", "specific action 2"],
+        "hospitalAlert": true|false with explanation
+      }
+    }`;
   }
 
   buildHotspotAnalysisPrompt(context, algorithm, sensitivity) {

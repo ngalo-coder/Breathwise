@@ -1,30 +1,79 @@
-// backend/src/routes/ai.routes.js
-// AI-powered routes for enhanced air quality analysis
-
+/**
+ * @swagger
+ * tags:
+ *   name: AI Analysis
+ *   description: AI-powered analysis endpoints
+ */
 import express from 'express';
-import { 
+import {
   getAIAnalysis,
-  getSmartHotspots,
-  getEarlyWarnings,
-  getPolicyEffectiveness,
-  getAIDashboard
-} from '../controllers/aiEnhancedAir.controller.js';
+  getSmartHotspots  
+} from '../controllers/ai.controller.js';
+
+import rateLimit from 'express-rate-limit';
+
+// Rate limiting for AI endpoints (more expensive operations)
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: {
+    error: 'Too many AI requests',
+    message: 'Please try again after 15 minutes'
+  }
+});
 
 const router = express.Router();
 
-// 🤖 AI-powered comprehensive analysis
-router.get('/analysis', getAIAnalysis);
+/**
+ * @swagger
+ * /{city}/analysis:
+ *   get:
+ *     summary: Get AI analysis for a city
+ *     tags: [AI Analysis]
+ *     parameters:
+ *       - in: path
+ *         name: city
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: City name
+ *     responses:
+ *       200:
+ *         description: AI analysis data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.get('/:city/analysis', aiLimiter, getAIAnalysis);
 
-// 🎯 Smart hotspot detection with ML
-router.get('/hotspots/smart', getSmartHotspots);
+/**
+ * @swagger
+ * /{city}/smart-hotspots:
+ *   get:
+ *     summary: Get smart hotspots for a city
+ *     tags: [AI Analysis]
+ *     parameters:
+ *       - in: path
+ *         name: city
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: City name
+ *     responses:
+ *       200:
+ *         description: Smart hotspots data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.get('/:city/smart-hotspots', aiLimiter, getSmartHotspots);
 
-// 🚨 Intelligent early warning system
-router.get('/warnings', getEarlyWarnings);
+// Other routes with Swagger annotations...
 
-// 📊 Policy effectiveness analysis
-router.get('/policy/effectiveness', getPolicyEffectiveness);
-
-// 🌟 AI-powered dashboard
-router.get('/dashboard', getAIDashboard);
+// router.get('/:city/early-warnings', aiLimiter, getEarlyWarnings);
+// router.get('/:city/policy-analysis', aiLimiter, getPolicyAnalysis);
+// router.get('/:city/recommendations', aiLimiter, getRecommendations);
 
 export default router;

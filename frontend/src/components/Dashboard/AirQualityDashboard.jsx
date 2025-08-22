@@ -1,31 +1,41 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { DataContext } from '../../context/DataContext';
-import { SocketContext } from '../../context/SocketContext';
+import React, { useState, useEffect } from 'react';
+import { useData } from '../../context/DataContext';
+import { useSocket } from '../../context/SocketContext';
 import AirQualityChart from './AirQualityChart';
+import MapView from '../Map/MapView';
+import Analytics from '../Analytics/Analytics';
+import Alerts from '../Alerts/Alerts';
 
 const AirQualityDashboard = () => {
-  const { 
-    dashboardData, 
-    measurements, 
-    alerts, 
-    loading, 
-    fetchDashboardData, 
-    fetchMeasurements, 
-    fetchAlerts 
-  } = useContext(DataContext);
+  const {
+    dashboardData,
+    measurements,
+    alerts,
+    aiAnalysis,
+    loading,
+    refreshData,
+    refreshSpecificData,
+    triggerAIAnalysis
+  } = useData();
   
-  const { socket } = useContext(SocketContext);
+  const {
+    socket,
+    isConnected,
+    requestDataUpdate,
+    requestRefresh
+  } = useSocket();
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
   
   useEffect(() => {
-    fetchDashboardData();
-    fetchMeasurements();
-    fetchAlerts();
+    // Initial data load
+    refreshData();
     
+    // Set up auto-refresh interval
     const interval = setInterval(() => {
-      fetchDashboardData();
+      refreshSpecificData('dashboard');
     }, 300000); // 5 minutes
     
     return () => clearInterval(interval);
@@ -33,26 +43,41 @@ const AirQualityDashboard = () => {
   
   useEffect(() => {
     if (socket) {
-      socket.on('new_measurement', () => {
-        fetchDashboardData();
-        fetchMeasurements();
+      // Listen for real-time data updates
+      socket.on('realtime_update', (data) => {
+        refreshSpecificData('dashboard');
+        setLastUpdated(new Date());
+      });
+      
+      socket.on('data_update', (data) => {
+        refreshSpecificData('measurements');
       });
       
       socket.on('new_alert', () => {
-        fetchAlerts();
+        refreshSpecificData('alerts');
+      });
+      
+      socket.on('ai_analysis_complete', () => {
+        refreshSpecificData('ai');
       });
       
       return () => {
-        socket.off('new_measurement');
+        socket.off('realtime_update');
+        socket.off('data_update');
         socket.off('new_alert');
+        socket.off('ai_analysis_complete');
       };
     }
   }, [socket]);
   
-  const refreshData = () => {
-    fetchDashboardData();
-    fetchMeasurements();
-    fetchAlerts();
+  const handleRefresh = () => {
+    refreshData();
+    requestDataUpdate();
+    setLastUpdated(new Date());
+  };
+  
+  const handleAIAnalysis = () => {
+    triggerAIAnalysis('comprehensive');
   };
   
   const getAQIColor = (aqi) => {
@@ -225,13 +250,26 @@ const AirQualityDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {loading && (
+          <div className="fixed top-0 left-0 w-full h-1 z-50">
+            <div className="bg-unep-primary h-full animate-pulse-slow"></div>
+          </div>
+        )}
+        
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
-            {loading && (
-              <div className="fixed top-0 left-0 w-full h-1 z-50">
-                <div className="bg-unep-primary h-full animate-pulse-slow"></div>
+            {/* Connection Status */}
+            <div className={`flex items-center justify-between px-4 py-2 rounded-lg ${isConnected ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+              <div className="flex items-center">
+                <div className={`w-3 h-3 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className={`text-sm font-medium ${isConnected ? 'text-green-700' : 'text-red-700'}`}>
+                  {isConnected ? 'Connected to real-time updates' : 'Disconnected from server'}
+                </span>
               </div>
-            )}
+              <div className="text-xs text-gray-500">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </div>
+            </div>
             
             {/* Quick Stats Bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -304,14 +342,17 @@ const AirQualityDashboard = () => {
                   </div>
                 </div>
                 <div className="mt-4 md:mt-0 flex space-x-2">
-                  <button 
-                    onClick={refreshData}
+                  <button
+                    onClick={handleRefresh}
                     className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-unep-primary"
                   >
                     🔄 Refresh
                   </button>
-                  <button className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-unep-primary hover:bg-unep-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-unep-primary">
-                    📋 Details
+                  <button
+                    onClick={handleAIAnalysis}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-unep-primary hover:bg-unep-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-unep-primary"
+                  >
+                    🤖 AI Analysis
                   </button>
                 </div>
               </div>
@@ -354,23 +395,54 @@ const AirQualityDashboard = () => {
                 <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-unep-secondary hover:shadow-card-hover transition-all">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                      <span className="mr-2 text-unep-secondary">ℹ️</span>
+                      <span className="mr-2 text-unep-secondary">🤖</span>
                       AI Insights
                     </h3>
-                    <div className="bg-unep-secondary/10 px-2 py-1 rounded text-xs text-unep-secondary font-medium">
-                      Updated
-                    </div>
+                    <button
+                      onClick={handleAIAnalysis}
+                      className="bg-unep-secondary/10 px-2 py-1 rounded text-xs text-unep-secondary font-medium hover:bg-unep-secondary/20"
+                    >
+                      Refresh
+                    </button>
                   </div>
                   
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-700">
-                      <span className="font-medium">Morning traffic patterns:</span> PM2.5 levels peak during 7-9 AM rush hour in central business district
-                    </p>
-                    <div className="mt-1 flex justify-between items-center">
-                      <span className="text-xs text-gray-500">AI Analysis</span>
-                      <span className="px-2 py-0.5 bg-blue-100 rounded-full text-xs text-blue-800">High Impact</span>
+                  {aiAnalysis ? (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Risk Level:</span> {aiAnalysis.riskLevel || 'Moderate'}
+                        </p>
+                        <div className="mt-1 flex justify-between items-center">
+                          <span className="text-xs text-gray-500">AI Analysis</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                            aiAnalysis.riskLevel === 'critical' ? 'bg-red-100 text-red-800' :
+                            aiAnalysis.riskLevel === 'high' ? 'bg-orange-100 text-orange-800' :
+                            aiAnalysis.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {aiAnalysis.riskLevel || 'Moderate'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {aiAnalysis.keyFindings && aiAnalysis.keyFindings.length > 0 && (
+                        <div className="p-3 bg-purple-50 rounded-lg">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Key Findings:</p>
+                          <ul className="text-sm text-gray-600 space-y-1 pl-4 list-disc">
+                            {aiAnalysis.keyFindings.slice(0, 2).map((finding, index) => (
+                              <li key={index}>{finding}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600">
+                        Click "AI Analysis" to generate insights based on current air quality data.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Recent Activity */}
@@ -385,16 +457,42 @@ const AirQualityDashboard = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-start">
-                    <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
-                      <span className="text-red-600">⚠️</span>
+                  {alerts && alerts.length > 0 ? (
+                    <div className="space-y-3">
+                      {alerts.slice(0, 2).map((alert, index) => (
+                        <div key={index} className="flex items-start">
+                          <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-3 ${
+                            alert.severity === 'critical' ? 'bg-red-100 text-red-600' :
+                            alert.severity === 'high' ? 'bg-orange-100 text-orange-600' :
+                            alert.severity === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                            'bg-green-100 text-green-600'
+                          }`}>
+                            <span>{alert.type === 'health_emergency' ? '🚨' :
+                                  alert.type === 'air_pollution' ? '💨' :
+                                  alert.type === 'pollution_hotspot' ? '🔥' : '⚠️'}</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{alert.message || 'Alert triggered'}</p>
+                            <p className="text-xs text-gray-500">{alert.affected_area || 'Nairobi area'}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(alert.timestamp).toLocaleTimeString() || '15 minutes ago'}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Alert triggered</p>
-                      <p className="text-xs text-gray-500">PM2.5 exceeded threshold in CBD</p>
-                      <p className="text-xs text-gray-400 mt-1">15 minutes ago</p>
+                  ) : (
+                    <div className="flex items-start">
+                      <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                        <span className="text-gray-600">✓</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">No active alerts</p>
+                        <p className="text-xs text-gray-500">Air quality is within normal parameters</p>
+                        <p className="text-xs text-gray-400 mt-1">Updated {lastUpdated.toLocaleTimeString()}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -402,24 +500,15 @@ const AirQualityDashboard = () => {
         )}
         
         {activeTab === 'map' && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Map View</h2>
-            <p className="text-gray-600">Map component will be displayed here.</p>
-          </div>
+          <MapView />
         )}
         
         {activeTab === 'analytics' && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Analytics</h2>
-            <p className="text-gray-600">Analytics component will be displayed here.</p>
-          </div>
+          <Analytics />
         )}
         
         {activeTab === 'alerts' && (
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Alerts</h2>
-            <p className="text-gray-600">Alerts component will be displayed here.</p>
-          </div>
+          <Alerts />
         )}
       </main>
 

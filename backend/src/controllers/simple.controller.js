@@ -3,18 +3,28 @@
 
 import directDataService from '../services/directDataService.js';
 import aiPolicyService from '../services/aiPolicyService.js';
-import { io } from '../app.js';
 
-// 🌍 Get comprehensive Nairobi air quality data
-export const getNairobiData = async (req, res) => {
+// Store socket.io instance after app initialization
+let socketIO = null;
+
+// Function to set socket.io instance (call this after app initialization)
+export const setSocketIO = (ioInstance) => {
+  socketIO = ioInstance;
+};
+
+// 🌍 Get comprehensive city air quality data
+export const getCityData = async (req, res) => {
   try {
-    console.log('🌍 Fetching comprehensive Nairobi data...');
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
     
-    const data = await directDataService.getNairobiData();
+    console.log(`🌍 Fetching comprehensive ${city}, ${country} data...`);
     
-    // Emit real-time update
-    if (io) {
-      io.to('nairobi_dashboard').emit('data_update', {
+    const data = await directDataService.getCityData(city, country);
+    
+    // Emit real-time update if socket is available
+    if (socketIO) {
+      const roomName = `${city.toLowerCase()}_dashboard`;
+      socketIO.to(roomName).emit('data_update', {
         measurements_count: data.measurements.length,
         avg_pm25: data.summary.avg_pm25,
         air_quality_status: data.summary.air_quality_status,
@@ -34,7 +44,7 @@ export const getNairobiData = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Nairobi data error:', error);
+    console.error('❌ City data error:', error);
     res.status(500).json({
       error: 'Failed to fetch air quality data',
       message: error.message,
@@ -46,11 +56,12 @@ export const getNairobiData = async (req, res) => {
 // 📊 Get air quality measurements in GeoJSON format
 export const getMeasurements = async (req, res) => {
   try {
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
     const { format = 'geojson', bbox, pollutants } = req.query;
     
-    console.log('📊 Fetching air quality measurements...');
+    console.log(`📊 Fetching ${city}, ${country} air quality measurements...`);
     
-    const data = await directDataService.getNairobiData();
+    const data = await directDataService.getCityData(city, country);
     
     let measurements = data.measurements;
     
@@ -79,7 +90,7 @@ export const getMeasurements = async (req, res) => {
         features: measurements,
         metadata: {
           total_measurements: measurements.length,
-          bbox: bbox || 'Nairobi area',
+          bbox: bbox || `${city} area`,
           pollutants_included: pollutants || 'all available',
           data_sources: data.data_sources,
           generated_at: data.timestamp
@@ -119,11 +130,12 @@ export const getMeasurements = async (req, res) => {
 // 🔥 Get pollution hotspots
 export const getHotspots = async (req, res) => {
   try {
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
     const { severity = 'moderate', format = 'geojson' } = req.query;
     
-    console.log('🔥 Fetching pollution hotspots...');
+    console.log(`🔥 Fetching pollution hotspots for ${city}, ${country}...`);
     
-    const data = await directDataService.getNairobiData();
+    const data = await directDataService.getCityData(city, country);
     
     let hotspots = data.hotspots;
     
@@ -147,7 +159,8 @@ export const getHotspots = async (req, res) => {
           total_hotspots: hotspots.length,
           severity_filter: severity,
           detection_time: data.timestamp,
-          data_sources: data.data_sources
+          data_sources: data.data_sources,
+          location: `${city}, ${country}`
         }
       });
     } else {
@@ -162,7 +175,8 @@ export const getHotspots = async (req, res) => {
         })),
         metadata: {
           count: hotspots.length,
-          generated_at: data.timestamp
+          generated_at: data.timestamp,
+          location: `${city}, ${country}`
         }
       });
     }
@@ -179,13 +193,19 @@ export const getHotspots = async (req, res) => {
 // 🚨 Get active alerts
 export const getAlerts = async (req, res) => {
   try {
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
     const { severity, limit = 20 } = req.query;
     
-    console.log('🚨 Fetching active alerts...');
+    console.log(`🚨 Fetching active alerts for ${city}, ${country}...`);
     
-    const data = await directDataService.getNairobiData();
+    const data = await directDataService.getCityData(city, country);
     
     let alerts = data.alerts;
+    
+    // Filter by severity if specified
+    if (severity) {
+      alerts = alerts.filter(alert => alert.severity === severity);
+    }
     
     // Limit results
     alerts = alerts.slice(0, parseInt(limit));
@@ -206,7 +226,8 @@ export const getAlerts = async (req, res) => {
         total_alerts: alerts.length,
         severity_filter: severity || 'all',
         generated_at: data.timestamp,
-        alert_types: [...new Set(alerts.map(a => a.type))]
+        alert_types: [...new Set(alerts.map(a => a.type))],
+        location: `${city}, ${country}`
       }
     });
 
@@ -222,12 +243,13 @@ export const getAlerts = async (req, res) => {
 // 🤖 AI-powered analysis (without database)
 export const getAIAnalysis = async (req, res) => {
   try {
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
     const { analysis_depth = 'standard' } = req.query;
     
-    console.log('🤖 Generating AI analysis...');
+    console.log(`🤖 Generating AI analysis for ${city}, ${country}...`);
     
     // Get current data
-    const currentData = await directDataService.getNairobiData();
+    const currentData = await directDataService.getCityData(city, country);
     
     // Prepare data for AI analysis
     const analysisInput = {
@@ -262,7 +284,7 @@ export const getAIAnalysis = async (req, res) => {
     const response = {
       timestamp: new Date().toISOString(),
       analysis_type: analysis_depth,
-      location: 'Nairobi, Kenya',
+      location: `${city}, ${country}`,
       
       // AI insights
       ai_insights: {
@@ -303,9 +325,10 @@ export const getAIAnalysis = async (req, res) => {
       measurements_count: currentData.measurements.length
     };
 
-    // Emit AI update via WebSocket
-    if (io) {
-      io.to('nairobi_dashboard').emit('ai_analysis_complete', {
+    // Emit AI update via WebSocket if available
+    if (socketIO) {
+      const roomName = `${city.toLowerCase()}_dashboard`;
+      socketIO.to(roomName).emit('ai_analysis_complete', {
         risk_level: response.ai_insights.risk_level,
         confidence: response.ai_insights.confidence_score,
         key_finding: response.ai_insights.key_findings[0],
@@ -328,11 +351,12 @@ export const getAIAnalysis = async (req, res) => {
 // 🎯 Smart hotspot detection with AI
 export const getSmartHotspots = async (req, res) => {
   try {
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
     const { algorithm = 'dbscan', sensitivity = 'medium' } = req.query;
     
-    console.log('🎯 Detecting smart hotspots...');
+    console.log(`🎯 Detecting smart hotspots for ${city}, ${country}...`);
     
-    const currentData = await directDataService.getNairobiData();
+    const currentData = await directDataService.getCityData(city, country);
     
     // Prepare data for AI hotspot detection
     const hotspotInput = {
@@ -383,7 +407,8 @@ export const getSmartHotspots = async (req, res) => {
         total_clusters: smartHotspots.clusters.length,
         detection_confidence: smartHotspots.overall_confidence,
         data_sources: currentData.data_sources,
-        analysis_timestamp: new Date().toISOString()
+        analysis_timestamp: new Date().toISOString(),
+        location: `${city}, ${country}`
       }
     };
 
@@ -401,13 +426,15 @@ export const getSmartHotspots = async (req, res) => {
 // 📊 Comprehensive dashboard
 export const getDashboard = async (req, res) => {
   try {
-    console.log('📊 Building comprehensive dashboard...');
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
     
-    const currentData = await directDataService.getNairobiData();
+    console.log(`📊 Building comprehensive dashboard for ${city}, ${country}...`);
+    
+    const currentData = await directDataService.getCityData(city, country);
     
     const dashboard = {
       timestamp: new Date().toISOString(),
-      location: 'Nairobi, Kenya',
+      location: `${city}, ${country}`,
       
       // Overview
       overview: {
@@ -472,9 +499,9 @@ export const getDashboard = async (req, res) => {
       // Data health
       data_health: {
         sources_active: currentData.data_sources.length,
-        expected_sources: 4, // WeatherAPI, OpenAQ, IQAir, WAQI
+        expected_sources: 3, // WeatherAPI, IQAir, WAQI (OpenAQ is deprecated)
         data_freshness: 'current',
-        coverage_completeness: Math.min(currentData.data_sources.length / 4, 1) * 100
+        coverage_completeness: Math.min(currentData.data_sources.length / 3, 1) * 100
       },
       
       // Quick stats for widgets
@@ -500,17 +527,20 @@ export const getDashboard = async (req, res) => {
 // 🔄 Manual data refresh
 export const refreshData = async (req, res) => {
   try {
-    console.log('🔄 Manual data refresh triggered...');
+    const { city = 'Nairobi', country = 'Kenya' } = req.params;
+    
+    console.log(`🔄 Manual data refresh triggered for ${city}, ${country}...`);
     
     // Clear cache to force fresh data
     directDataService.clearCache();
     
     // Fetch fresh data
-    const freshData = await directDataService.getNairobiData();
+    const freshData = await directDataService.getCityData(city, country);
     
-    // Emit refresh notification
-    if (io) {
-      io.to('nairobi_dashboard').emit('data_refreshed', {
+    // Emit refresh notification if socket is available
+    if (socketIO) {
+      const roomName = `${city.toLowerCase()}_dashboard`;
+      socketIO.to(roomName).emit('data_refreshed', {
         timestamp: freshData.timestamp,
         measurements_count: freshData.measurements.length,
         sources_active: freshData.data_sources.length,

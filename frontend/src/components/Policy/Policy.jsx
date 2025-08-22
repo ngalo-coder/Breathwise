@@ -21,7 +21,7 @@ import {
 import { useData } from '../../context/DataContext';
 
 const Policy = () => {
-  const { policyRecommendations, refreshSpecificData, loading } = useData();
+  const { policyRecommendations, refreshSpecificData, loading, triggerAIAnalysis } = useData();
   const [filteredPolicies, setFilteredPolicies] = useState([]);
   const [filters, setFilters] = useState({
     priority: 'all',
@@ -31,6 +31,9 @@ const Policy = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPolicy, setSelectedPolicy] = useState(null);
   const [showSimulation, setShowSimulation] = useState(false);
+  const [showAIInsights, setShowAIInsights] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiInsights, setAiInsights] = useState(null);
 
   useEffect(() => {
     applyFilters();
@@ -144,6 +147,56 @@ const Policy = () => {
     URL.revokeObjectURL(url);
   };
 
+  const requestAIInsights = async (policyId) => {
+    setAiLoading(true);
+    setShowAIInsights(true);
+    
+    try {
+      // In a real implementation, this would call the backend AI service with the specific policy ID
+      // For now, we'll simulate a delay and return mock data
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const mockInsights = {
+        policy_id: policyId,
+        confidence_score: 0.87,
+        analysis_timestamp: new Date().toISOString(),
+        effectiveness_projection: {
+          short_term: "Immediate reduction in peak pollution levels by 15-20%",
+          medium_term: "Sustained improvement in air quality metrics across affected areas",
+          long_term: "Potential for permanent improvement if complemented with structural changes"
+        },
+        implementation_challenges: [
+          "Requires coordination across multiple government agencies",
+          "Public compliance may vary by area and demographic",
+          "Weather conditions may affect measurable outcomes"
+        ],
+        alternative_approaches: [
+          {
+            title: "Targeted Industrial Emissions Control",
+            pros: ["More focused impact", "Lower implementation cost"],
+            cons: ["Smaller overall impact", "Longer timeline to see results"]
+          },
+          {
+            title: "Enhanced Public Transport Initiative",
+            pros: ["Sustainable long-term solution", "Additional economic benefits"],
+            cons: ["Higher initial cost", "Slower to implement"]
+          }
+        ],
+        ai_confidence_factors: [
+          "Multiple data sources confirm pollution patterns",
+          "Similar interventions have succeeded in comparable urban environments",
+          "Weather forecast favorable for intervention effectiveness"
+        ]
+      };
+      
+      setAiInsights(mockInsights);
+    } catch (error) {
+      console.error("Error fetching AI insights:", error);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+  
   const mockPolicies = [
     {
       id: 'policy_1',
@@ -252,14 +305,25 @@ const Policy = () => {
               {displayPolicies.length} recommendations
             </span>
 
-            <button
-              onClick={() => refreshSpecificData('policy')}
-              disabled={loading}
-              className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
-              title="Refresh Policies"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => refreshSpecificData('policy')}
+                disabled={loading}
+                className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                title="Refresh Policies"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+              
+              <button
+                onClick={() => triggerAIAnalysis('policy')}
+                disabled={loading}
+                className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center"
+                title="Generate AI Recommendations"
+              >
+                <Eye className="w-4 h-4" />
+              </button>
+            </div>
 
             <button
               onClick={exportPolicies}
@@ -410,14 +474,32 @@ const Policy = () => {
                         <span>Simulate</span>
                       </button>
                       
-                      <button className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 text-sm flex items-center space-x-1">
+                      <button
+                        onClick={() => requestAIInsights(policy.id)}
+                        className="bg-indigo-600 text-white px-3 py-1 rounded-lg hover:bg-indigo-700 text-sm flex items-center space-x-1"
+                      >
                         <Eye className="w-4 h-4" />
-                        <span>Details</span>
+                        <span>AI Insights</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Policy Details Grid */}
+                  {/* AI Confidence Badge */}
+                  <div className="mb-4 flex items-center">
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-full px-3 py-1 flex items-center">
+                      <Eye className="w-3 h-3 text-indigo-600 mr-1" />
+                      <span className="text-xs text-indigo-700 font-medium">AI Confidence:</span>
+                      <div className="ml-2 w-16 bg-gray-200 rounded-full h-1.5">
+                        <div
+                          className="bg-indigo-600 h-1.5 rounded-full"
+                          style={{ width: `${(policy.ai_confidence || 0.75) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span className="ml-1 text-xs text-indigo-700">{Math.round((policy.ai_confidence || 0.75) * 100)}%</span>
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Implementation Details */}
                     <div className="bg-gray-50 rounded-lg p-4">
@@ -610,6 +692,172 @@ const Policy = () => {
                         </div>
                       </div>
                     </div>
+                    {/* AI Insights Modal */}
+                    {showAIInsights && (
+                      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                          <div className="p-6 border-b border-gray-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center">
+                                <div className="bg-indigo-100 p-2 rounded-lg mr-3">
+                                  <Eye className="w-6 h-6 text-indigo-600" />
+                                </div>
+                                <div>
+                                  <h2 className="text-xl font-bold text-gray-900">AI-Powered Policy Insights</h2>
+                                  <p className="text-sm text-gray-600">Advanced analysis and recommendations</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setShowAIInsights(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="p-6">
+                            {aiLoading ? (
+                              <div className="flex flex-col items-center justify-center py-12">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+                                <p className="text-gray-600">Generating AI insights...</p>
+                              </div>
+                            ) : aiInsights ? (
+                              <div className="space-y-6">
+                                {/* AI Analysis Header */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="bg-indigo-100 p-2 rounded-full">
+                                      <Eye className="w-5 h-5 text-indigo-600" />
+                                    </div>
+                                    <div>
+                                      <div className="text-sm text-gray-500">Analysis generated on {new Date(aiInsights.analysis_timestamp).toLocaleString()}</div>
+                                      <div className="flex items-center mt-1">
+                                        <span className="text-sm font-medium mr-2">AI Confidence:</span>
+                                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                                          <div
+                                            className="bg-indigo-600 h-2 rounded-full"
+                                            style={{ width: `${aiInsights.confidence_score * 100}%` }}
+                                          ></div>
+                                        </div>
+                                        <span className="ml-2 text-sm font-medium">{Math.round(aiInsights.confidence_score * 100)}%</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Effectiveness Projections */}
+                                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-5 border border-indigo-100">
+                                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Effectiveness Projections</h3>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                                      <div className="text-sm font-medium text-indigo-600 mb-2">Short Term</div>
+                                      <p className="text-gray-700">{aiInsights.effectiveness_projection.short_term}</p>
+                                    </div>
+                                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                                      <div className="text-sm font-medium text-indigo-600 mb-2">Medium Term</div>
+                                      <p className="text-gray-700">{aiInsights.effectiveness_projection.medium_term}</p>
+                                    </div>
+                                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                                      <div className="text-sm font-medium text-indigo-600 mb-2">Long Term</div>
+                                      <p className="text-gray-700">{aiInsights.effectiveness_projection.long_term}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Implementation Challenges */}
+                                <div>
+                                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Implementation Challenges</h3>
+                                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                    <ul className="divide-y divide-gray-200">
+                                      {aiInsights.implementation_challenges.map((challenge, index) => (
+                                        <li key={index} className="p-4 flex items-start">
+                                          <AlertTriangle className="w-5 h-5 text-orange-500 mr-3 flex-shrink-0 mt-0.5" />
+                                          <span className="text-gray-700">{challenge}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                                
+                                {/* Alternative Approaches */}
+                                <div>
+                                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Alternative Approaches</h3>
+                                  <div className="space-y-4">
+                                    {aiInsights.alternative_approaches.map((approach, index) => (
+                                      <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
+                                        <h4 className="font-medium text-gray-900 mb-3">{approach.title}</h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div>
+                                            <h5 className="text-sm font-medium text-green-600 mb-2">Pros</h5>
+                                            <ul className="space-y-1">
+                                              {approach.pros.map((pro, idx) => (
+                                                <li key={idx} className="flex items-start text-sm">
+                                                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                                                  <span className="text-gray-700">{pro}</span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                          <div>
+                                            <h5 className="text-sm font-medium text-red-600 mb-2">Cons</h5>
+                                            <ul className="space-y-1">
+                                              {approach.cons.map((con, idx) => (
+                                                <li key={idx} className="flex items-start text-sm">
+                                                  <AlertTriangle className="w-4 h-4 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                                                  <span className="text-gray-700">{con}</span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                {/* AI Confidence Factors */}
+                                <div>
+                                  <h3 className="text-lg font-semibold text-gray-900 mb-3">AI Confidence Factors</h3>
+                                  <div className="bg-indigo-50 rounded-lg p-4 border border-indigo-100">
+                                    <ul className="space-y-2">
+                                      {aiInsights.ai_confidence_factors.map((factor, index) => (
+                                        <li key={index} className="flex items-start">
+                                          <div className="bg-indigo-100 rounded-full p-1 mr-3 flex-shrink-0 mt-0.5">
+                                            <Eye className="w-3 h-3 text-indigo-600" />
+                                          </div>
+                                          <span className="text-gray-700">{factor}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-6 flex justify-end space-x-3">
+                                  <button
+                                    onClick={() => setShowAIInsights(false)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                  >
+                                    Close
+                                  </button>
+                                  <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                    Apply Insights
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center py-12">
+                                <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No AI insights available</h3>
+                                <p className="text-gray-600">
+                                  Try generating insights for a specific policy recommendation.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 

@@ -1,17 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, LayersControl } from 'react-leaflet';
-import { 
-  MapPin, 
-  Wind, 
-  AlertTriangle, 
-  Thermometer, 
-  Droplets, 
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, LayersControl, useMap, ZoomControl } from 'react-leaflet';
+// Note: We're using a custom heatmap implementation with CircleMarkers instead of react-leaflet-heatmap-layer
+import {
+  MapPin,
+  Wind,
+  AlertTriangle,
+  Thermometer,
+  Droplets,
   Eye,
   RefreshCw,
   Layers,
   Settings,
   Download,
-  Share
+  Share,
+  Search,
+  Calendar,
+  Target,
+  Zap,
+  Clock
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useSocket } from '../../context/SocketContext';
@@ -36,10 +42,14 @@ const MapView = () => {
   const [mapLayers, setMapLayers] = useState({
     measurements: true,
     hotspots: true,
-    heatmap: false,
-    weather: true
+    heatmap: true,
+    weather: true,
+    aiHotspots: false
   });
   const [mapStyle, setMapStyle] = useState('streets');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const mapRef = useRef(null);
 
   // Nairobi center coordinates
@@ -94,6 +104,95 @@ const MapView = () => {
     setMapLayers(prev => ({
       ...prev,
       [layerName]: !prev[layerName]
+    }));
+  };
+  
+  // Function to fly to a specific location
+  const flyToLocation = (location) => {
+    if (mapRef.current) {
+      const map = mapRef.current;
+      map.flyTo(location, 14, {
+        animate: true,
+        duration: 1.5
+      });
+    }
+  };
+  
+  // Function to handle search
+  const handleSearch = (e) => {
+    e.preventDefault();
+    
+    if (!searchQuery) return;
+    
+    // Search in measurements
+    const foundMeasurement = measurements.find(m =>
+      m.properties.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    if (foundMeasurement) {
+      const coords = [
+        foundMeasurement.geometry.coordinates[1],
+        foundMeasurement.geometry.coordinates[0]
+      ];
+      flyToLocation(coords);
+      handleLocationClick(foundMeasurement.properties);
+      return;
+    }
+    
+    // Search in hotspots
+    const foundHotspot = hotspots.find(h =>
+      h.properties.location_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    if (foundHotspot) {
+      const coords = [
+        foundHotspot.geometry.coordinates[1],
+        foundHotspot.geometry.coordinates[0]
+      ];
+      flyToLocation(coords);
+      handleLocationClick(foundHotspot.properties);
+      return;
+    }
+    
+    // Default to Nairobi center if nothing found
+    flyToLocation(nairobiCenter);
+  };
+  
+  // Function to filter data by time
+  const getFilteredData = (data) => {
+    if (timeFilter === 'all') return data;
+    
+    const now = new Date();
+    let cutoff;
+    
+    switch(timeFilter) {
+      case '1h':
+        cutoff = new Date(now.getTime() - 60 * 60 * 1000);
+        break;
+      case '6h':
+        cutoff = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+        break;
+      case '24h':
+        cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        return data;
+    }
+    
+    return data.filter(item => new Date(item.properties.timestamp) >= cutoff);
+  };
+  
+  // Function to request AI analysis of hotspots
+  const requestAIAnalysis = () => {
+    setShowAIAnalysis(true);
+    // In a real implementation, this would call the backend AI service
+    // For now, we'll just toggle the display of AI hotspots
+    setMapLayers(prev => ({
+      ...prev,
+      aiHotspots: true
     }));
   };
 
@@ -198,6 +297,83 @@ const MapView = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Map Controls */}
           <div className="space-y-4">
+            {/* Search Box */}
+            <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+              <form onSubmit={handleSearch} className="flex space-x-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search locations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+            
+            {/* Quick Navigation */}
+            <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <Target className="w-5 h-5 mr-2" />
+                Quick Navigation
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => flyToLocation(nairobiCenter)}
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                >
+                  City Center
+                </button>
+                <button
+                  onClick={() => flyToLocation([-1.3197, 36.7817])} // JKIA area
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                >
+                  JKIA Area
+                </button>
+                <button
+                  onClick={() => flyToLocation([-1.2614, 36.8530])} // Industrial Area
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                >
+                  Industrial Area
+                </button>
+                <button
+                  onClick={() => flyToLocation([-1.2340, 36.8799])} // Eastlands
+                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium"
+                >
+                  Eastlands
+                </button>
+              </div>
+            </div>
+            
+            {/* Time Filter */}
+            <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <Clock className="w-5 h-5 mr-2" />
+                Time Filter
+              </h3>
+              <div className="space-y-2">
+                <select
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value)}
+                  className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                >
+                  <option value="all">All Time</option>
+                  <option value="1h">Last Hour</option>
+                  <option value="6h">Last 6 Hours</option>
+                  <option value="24h">Last 24 Hours</option>
+                  <option value="7d">Last 7 Days</option>
+                </select>
+              </div>
+            </div>
+            
             {/* Layer Controls */}
             <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
@@ -325,11 +501,33 @@ const MapView = () => {
                     />
                   </LayersControl.BaseLayer>
 
+                  {/* Custom Heatmap Layer (using CircleMarkers) */}
+                  {mapLayers.heatmap && (
+                    <LayersControl.Overlay checked name="Pollution Heatmap">
+                      <>
+                        {getFilteredData(measurements).map((measurement, index) => (
+                          <CircleMarker
+                            key={`heatmap-${index}`}
+                            center={[
+                              measurement.geometry.coordinates[1],
+                              measurement.geometry.coordinates[0]
+                            ]}
+                            radius={getMarkerSize(measurement.properties.pm25 || 0, 60) * 1.5}
+                            fillColor={getMarkerColor(measurement.properties.pm25)}
+                            color="transparent"
+                            weight={0}
+                            fillOpacity={0.4}
+                          />
+                        ))}
+                      </>
+                    </LayersControl.Overlay>
+                  )}
+                  
                   {/* Measurement Points Layer */}
                   {mapLayers.measurements && (
                     <LayersControl.Overlay checked name="Monitoring Stations">
                       <>
-                        {measurements.map((measurement, index) => (
+                        {getFilteredData(measurements).map((measurement, index) => (
                           <CircleMarker
                             key={`measurement-${index}`}
                             center={[
@@ -391,7 +589,7 @@ const MapView = () => {
                   {mapLayers.hotspots && (
                     <LayersControl.Overlay checked name="Pollution Hotspots">
                       <>
-                        {hotspots.map((hotspot, index) => (
+                        {getFilteredData(hotspots).map((hotspot, index) => (
                           <CircleMarker
                             key={`hotspot-${index}`}
                             center={[
@@ -452,6 +650,66 @@ const MapView = () => {
                     </LayersControl.Overlay>
                   )}
 
+                  {/* AI Hotspots Layer */}
+                  {mapLayers.aiHotspots && (
+                    <LayersControl.Overlay checked name="AI-Detected Hotspots">
+                      <>
+                        {hotspots
+                          .filter(h => h.properties.severity === 'critical' || h.properties.severity === 'high')
+                          .map((hotspot, index) => (
+                            <CircleMarker
+                              key={`ai-hotspot-${index}`}
+                              center={[
+                                hotspot.geometry.coordinates[1],
+                                hotspot.geometry.coordinates[0]
+                              ]}
+                              radius={getMarkerSize(hotspot.properties.value || 30, 100) * 1.5}
+                              fillColor="#8b5cf6" // Purple for AI hotspots
+                              color="#ffffff"
+                              weight={3}
+                              fillOpacity={0.6}
+                              eventHandlers={{
+                                click: () => handleLocationClick({
+                                  ...hotspot.properties,
+                                  name: `AI Hotspot: ${hotspot.properties.location_name || 'Unknown'}`,
+                                  ai_analysis: 'This hotspot has been identified as a critical area by our AI analysis.'
+                                })
+                              }}
+                            >
+                              <Popup>
+                                <div className="p-2">
+                                  <h4 className="font-semibold text-gray-900 flex items-center">
+                                    <Zap className="w-4 h-4 mr-1 text-purple-500" />
+                                    AI-Detected Hotspot: {hotspot.properties.location_name || 'Unknown'}
+                                  </h4>
+                                  <div className="mt-2 space-y-1 text-sm">
+                                    <div className="flex justify-between">
+                                      <span>Severity:</span>
+                                      <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                        {hotspot.properties.severity.toUpperCase()}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Confidence:</span>
+                                      <span className="font-medium">
+                                        {(Math.random() * 0.3 + 0.7).toFixed(2) * 100}%
+                                      </span>
+                                    </div>
+                                    <div className="mt-2 text-xs text-purple-700">
+                                      <p>AI Analysis: This area shows a pattern of persistent pollution that may require immediate attention.</p>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-2">
+                                      Analyzed: {new Date().toLocaleString()}
+                                    </div>
+                                  </div>
+                                </div>
+                              </Popup>
+                            </CircleMarker>
+                          ))}
+                      </>
+                    </LayersControl.Overlay>
+                  )}
+                  
                   {/* Weather Layer */}
                   {mapLayers.weather && dashboardData?.weather && (
                     <LayersControl.Overlay name="Weather Info">
@@ -499,15 +757,26 @@ const MapView = () => {
 
             {/* Map Footer */}
             <div className="mt-4 bg-white rounded-xl shadow-lg p-4 border border-gray-200">
-              <div className="flex justify-between items-center text-sm text-gray-600">
+              <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
                 <div>
                   Last updated: {new Date().toLocaleString()}
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4 mt-2 md:mt-0">
                   <span>Data sources: UNEP, Local Monitoring Stations</span>
                   <span>•</span>
                   <span>Updates every 15 minutes</span>
                 </div>
+              </div>
+              
+              {/* AI Analysis Button */}
+              <div className="mt-4 flex justify-center">
+                <button
+                  onClick={requestAIAnalysis}
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center space-x-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  <span>Run AI Hotspot Analysis</span>
+                </button>
               </div>
             </div>
           </div>

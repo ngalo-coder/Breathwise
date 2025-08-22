@@ -1,18 +1,82 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Air Quality
+ *   description: Air quality data endpoints
+ */
 import express from 'express';
-import { getHotspots, getMeasurements, getNairobiZones, triggerAdvancedAnalysis } from '../controllers/enhancedAir.controller.js';
+import {
+  getHotspots,
+  getMeasurements,
+  getNairobiZones,
+  triggerAnalysis
+} from '../controllers/air.controller.js';
 
+/**
+ * @swagger
+ * /hotspots:
+ *   get:
+ *     summary: Get pollution hotspots
+ *     tags: [Air Quality]
+ *     responses:
+ *       200:
+ *         description: Hotspots data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
 const router = express.Router();
 
-// Get pollution hotspots within bounding box
-router.get('/hotspots', getHotspots);
+// Air quality data routes
+router.get('/hotspots', getHotspots);           // Get pollution hotspots
 
-// Get air quality measurements
-router.get('/measurements', getMeasurements);
+/**
+ * @swagger
+ * /measurements:
+ *   get:
+ *     summary: Get air quality measurements
+ *     tags: [Air Quality]
+ *     responses:
+ *       200:
+ *         description: Measurements data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.get('/measurements', getMeasurements);   // Get air quality measurements
 
-// Get Nairobi monitoring zones
-router.get('/nairobi-zones', getNairobiZones);
+/**
+ * @swagger
+ * /nairobi-zones:
+ *   get:
+ *     summary: Get Nairobi monitoring zones
+ *     tags: [Air Quality]
+ *     responses:
+ *       200:
+ *         description: Nairobi zones data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.get('/nairobi-zones', getNairobiZones);  // Get Nairobi monitoring zones
 
-// Trigger hotspot analysis
-router.post('/analyze', triggerAdvancedAnalysis);
+/**
+ * @swagger
+ * /analyze:
+ *   post:
+ *     summary: Trigger hotspot analysis
+ *     tags: [Air Quality]
+ *     responses:
+ *       200:
+ *         description: Analysis initiated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ */
+router.post('/analyze', triggerAnalysis);       // Trigger hotspot analysis
 
 export default router;
